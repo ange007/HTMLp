@@ -2,14 +2,14 @@ program HTMLP;
 
 uses
   Forms,
-  WStrings   in '..\WStrings.pas',
-  Entities   in '..\Entities.pas',
-  DOMCore    in '..\DOMCore.pas',
-  HtmlTags   in '..\HtmlTags.pas',
-  HtmlReader in '..\HtmlReader.pas',
-  HtmlParser in '..\HTMLParser.pas',
-  Formatter  in '..\Formatter.pas',
-  MainForm   in 'MainForm.pas' {HTMLForm};
+  MainForm in 'MainForm.pas' {HTMLForm},
+  HTMLp.DOMCore in '..\HTMLp.DOMCore.pas',
+  HTMLp.Entities in '..\HTMLp.Entities.pas',
+  HTMLp.Formatter in '..\HTMLp.Formatter.pas',
+  HTMLp.Helper in '..\HTMLp.Helper.pas',
+  HTMLp.HTMLParser in '..\HTMLp.HTMLParser.pas',
+  HTMLp.HtmlReader in '..\HTMLp.HtmlReader.pas',
+  HTMLp.HtmlTags in '..\HTMLp.HtmlTags.pas';
 
 {$R *.RES}
 
