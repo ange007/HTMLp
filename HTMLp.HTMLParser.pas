@@ -1,9 +1,9 @@
-unit HTMLp.HtmlParser;
+unit HTMLp.HTMLParser;
 
 interface
 
 uses
-  HTMLp.DomCore, HTMLp.HtmlReader, HTMLp.HtmlTags;
+  HTMLp.DomCore, HTMLp.HTMLReader, HTMLp.HTMLTags;
 
 type
   THTMLParser = class
@@ -101,15 +101,15 @@ end;
 function THTMLParser.FindParentElement(tagList: THTMLTagSet): TElement;
 var
   Node: TNode;      
-  HtmlTag: THTMLTag;
+  HTMLTag: THTMLTag;
 begin
   Node := FCurrentNode;
 
   while Node.NodeType = ELEMENT_NODE do
   begin
-    HtmlTag := HtmlTagList.GetTagByName(Node.Name);
+    HTMLTag := HTMLTagList.GetTagByName(Node.Name);
 
-    if HtmlTag.Number in tagList then
+    if HTMLTag.Number in tagList then
     begin
       Result := Node as TElement;
       Exit;
@@ -124,15 +124,15 @@ end;
 function THTMLParser.FindTableParent: TElement;
 var
   Node: TNode;
-  HtmlTag: THTMLTag;
+  HTMLTag: THTMLTag;
 begin
   Node := FCurrentNode;
 
   while Node.NodeType = ELEMENT_NODE do
   begin
-    HtmlTag := HtmlTagList.GetTagByName(Node.Name);
+    HTMLTag := HTMLTagList.GetTagByName(Node.Name);
 
-    if (HtmlTag.Number = TD_TAG) or (HtmlTag.Number in BlockTags) then
+    if (HTMLTag.Number = TD_TAG) or (HTMLTag.Number in BlockTags) then
     begin
       Result := (Node as TElement);
       Exit;
@@ -232,7 +232,7 @@ var
   Element: TElement;
   Parent: TNode;
 begin
-  FCurrentTag := HtmlTagList.GetTagByName(FHtmlReader.Name);
+  FCurrentTag := HTMLTagList.GetTagByName(FHtmlReader.Name);
   if FCurrentTag.Number in (NeedFindParentTags + BlockTags) then
   begin
     Parent := FindParent;

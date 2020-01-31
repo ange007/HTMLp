@@ -1,11 +1,6 @@
 program HTMLP;
 
 uses
-  madExcept,
-  madLinkDisAsm,
-  madListHardware,
-  madListProcesses,
-  madListModules,
   Forms,
   MainForm in 'MainForm.pas' {HTMLForm},
   HTMLp.DOMCore in '..\HTMLp.DOMCore.pas',

@@ -1,4 +1,4 @@
-unit HTMLp.HtmlTags;
+unit HTMLp.HTMLTags;
 
 interface
 
@@ -61,7 +61,7 @@ type
   end;
 
 var
-  HtmlTagList: THTMLTagList;
+  HTMLTagList: THTMLTagList;
   URLSchemes: TURLSchemes;
 
 const
@@ -174,6 +174,10 @@ const
   NAV_TAG        = 105;
   TIME_TAG       = 106;
   SECTION_TAG    = 107;
+  PLAINTEXT_TAG  = 108;
+  XMP_TAG        = 109;
+  VIDEO_TAG      = 110;
+  AUDIO_TAG      = 111;
 
   {https://developer.mozilla.org/en-US/docs/Web/HTML/Block-level_elements}
   BlockTags               = [ADDRESS_TAG, TIME_TAG, BLOCKQUOTE_TAG, CENTER_TAG, DIV_TAG, DL_TAG, FIELDSET_TAG, {FORM_TAG,} A_TAG, H1_TAG,
@@ -200,7 +204,7 @@ const
   RowParentTags           = [TABLE_TAG, TBODY_TAG, TFOOT_TAG, THEAD_TAG];
   CellParentTags          = [TR_TAG];
   OptionParentTags        = [OPTGROUP_TAG, SELECT_TAG];
-  NotReadSubTags          = [CODE_TAG, SCRIPT_TAG];
+  PlainTextTags           = [CODE_TAG, SCRIPT_TAG, PLAINTEXT_TAG, XMP_TAG];
 
 implementation
 
@@ -229,6 +233,7 @@ begin
   FList.Add(THTMLTag.Create('area',       AREA_TAG,       [], []));
   FList.Add(THTMLTag.Create('aside',      ASIDE_TAG,      [], []));
   FList.Add(THTMLTag.Create('article',    ARTICLE_TAG,    [], []));
+  FList.Add(THTMLTag.Create('audio',      AUDIO_TAG,      [], []));
   FList.Add(THTMLTag.Create('b',          B_TAG,          [], []));
   FList.Add(THTMLTag.Create('base',       BASE_TAG,       [], []));
   FList.Add(THTMLTag.Create('basefont',   BASEFONT_TAG,   [], []));
@@ -298,6 +303,7 @@ begin
   FList.Add(THTMLTag.Create('p',          P_TAG,          [], []));
   FList.Add(THTMLTag.Create('param',      PARAM_TAG,      [], []));
   FList.Add(THTMLTag.Create('pre',        PRE_TAG,        [], []));
+  FList.Add(THTMLTag.Create('plaintext',  PLAINTEXT_TAG,  [], []));
   FList.Add(THTMLTag.Create('q',          Q_TAG,          [], []));
   FList.Add(THTMLTag.Create('s',          S_TAG,          [], []));
   FList.Add(THTMLTag.Create('samp',       SAMP_TAG,       [], []));
@@ -327,7 +333,9 @@ begin
   FList.Add(THTMLTag.Create('u',          U_TAG,          [], []));
   FList.Add(THTMLTag.Create('ul',         UL_TAG,         [], []));
   FList.Add(THTMLTag.Create('var',        VAR_TAG,        [], []));
+  FList.Add(THTMLTag.Create('video',      VIDEO_TAG,      [], []));
   FList.Add(THTMLTag.Create('wbr',        WBR_TAG,        [], []));
+  FList.Add(THTMLTag.Create('xmp',        XMP_TAG,        [], []));
 
   FUnknownTag := THTMLTag.Create('', UNKNOWN_TAG, [], [])
 end;
@@ -422,7 +430,7 @@ begin
 end;
 
 initialization
-  HtmlTagList := THTMLTagList.Create;
+  HTMLTagList := THTMLTagList.Create;
   URLSchemes := TURLSchemes.Create;
   URLSchemes.Add('http');
   URLSchemes.Add('https');
@@ -433,7 +441,7 @@ initialization
   URLSchemes.Add('gopher');
 
 finalization
-  HtmlTagList.Free;
+  HTMLTagList.Free;
   URLSchemes.Free;
 
 end.

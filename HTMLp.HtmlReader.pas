@@ -1,4 +1,4 @@
-unit HTMLp.HtmlReader;
+unit HTMLp.HTMLReader;
 
 interface
 
@@ -297,12 +297,12 @@ begin
   Result := (Ord(WC) in startMarkup);
 end;
 
-function THtmlReader.IsStartScript: Boolean;
+function THTMLReader.IsStartScript: Boolean;
 begin
   Result := Match(ScriptStartStr, true);
 end;
 
-function THtmlReader.IsStartTagChar: Boolean;
+function THTMLReader.IsStartTagChar: Boolean;
 var
   WC: WideChar;
 begin
@@ -550,7 +550,7 @@ begin
   if Result then Value := Copy(FHTMLStr, Start, FPosition - Start);
 end;
 
-function THtmlReader.ReadScript: Boolean;
+function THTMLReader.ReadScript: Boolean;
 var
   StartPos: Integer;
 begin
@@ -565,7 +565,7 @@ begin
   end
 end;
 
-function THtmlReader.ReadSpecialNode: Boolean;
+function THTMLReader.ReadSpecialNode: Boolean;
 begin
   Result := False;
 

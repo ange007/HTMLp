@@ -381,9 +381,9 @@ end;
 
 procedure THtmlFormatter.ProcessElement(Element: TElement);
 var
-  HtmlTag: THTMLTag;
+  HTMLTag: THTMLTag;
 begin
-  HtmlTag := HtmlTagList.GetTagByName(Element.TagName);
+  HTMLTag := HTMLTagList.GetTagByName(Element.TagName);
   AppendNewLine;
   AppendText(Spaces(FIndent * FDepth));
   AppendText('<' + Element.TagName);
@@ -393,7 +393,7 @@ begin
   begin
     AppendText('>');
 
-    if HtmlTag.Number in PreserveWhiteSpaceTags then FPreserveWhiteSpace := True;
+    if HTMLTag.Number in PreserveWhiteSpaceTags then FPreserveWhiteSpace := True;
     inherited ProcessElement(Element);
     FPreserveWhiteSpace := False;
 
@@ -465,7 +465,7 @@ procedure TTextFormatter.ProcessElement(Element: TElement);
 var
   HtmlTag: THTMLTag;
 begin
-  HtmlTag := HtmlTagList.GetTagByName(Element.TagName);
+  HtmlTag := HTMLTagList.GetTagByName(Element.TagName);
   if HtmlTag.Number in ViewAsBlockTags then AppendParagraph;
 
   case HtmlTag.Number of

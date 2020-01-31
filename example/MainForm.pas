@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, ExtCtrls,
+  StdCtrls, ExtCtrls, IdHTTP,
 
   HTMLp.HtmlParser, HTMLp.Helper, Buttons;
 
@@ -21,10 +21,10 @@ type
     XPathEdit: TEdit;
     procedure BrowseButtonClick(Sender: TObject);
     procedure OpenButtonClick(Sender: TObject);
-    procedure TopPanelResize(Sender: TObject);
     procedure UseXPathButtonClick(Sender: TObject);
   private
     HtmlParser: THTMLParser;
+    function GetHTML(const fileName: string): string;
   end;
 
 var
@@ -42,19 +42,42 @@ begin
   if OpenDialog.Execute then FileNameEdit.Text := OpenDialog.FileName
 end;
 
-procedure THTMLForm.UseXPathButtonClick(Sender: TObject);
+function THTMLForm.GetHTML(const fileName: string): string;
 var
   S: String;
   F: TStringStream;
 begin
-  F := TStringStream.Create{('', TEncoding.UTF8)};
-  try
-    F.LoadFromFile(FileNameEdit.Text);
-    S := F.DataString;
-  finally
-    F.Free
-  end;
+  if Pos('http', fileName) = 1 then
+  begin
+    with TIdHTTP.Create(nil) do
+    begin
+      HandleRedirects := True;
 
+      try Result := Get(fileName);
+      except
+        on e: Exception do ShowMessage(e.Message);
+      end;
+
+      Free;
+    end;
+  end
+  else
+  begin
+    F := TStringStream.Create{('', TEncoding.UTF8)};
+    try
+      F.LoadFromFile(FileNameEdit.Text);
+      Result := F.DataString;
+    finally
+      F.Free
+    end;
+  end;
+end;
+
+procedure THTMLForm.UseXPathButtonClick(Sender: TObject);
+var
+  S: string;
+begin
+  S := GetHTML(FileNameEdit.Text);
   Memo.Clear;
 
   ParseHTML(s).Find(XPathEdit.Text).Map( procedure(AIndex: Integer; AEl: TElement)
@@ -68,18 +91,12 @@ end;
 
 procedure THTMLForm.OpenButtonClick(Sender: TObject);
 var
-  S: String;
-  F: TStringStream;
+  S: string;
   HtmlDoc: TDocument;
   Formatter: TBaseFormatter;
 begin
-  F := TStringStream.Create;
-  try
-    F.LoadFromFile(FileNameEdit.Text);
-    S := F.DataString;
-  finally
-    FreeAndNil(F);
-  end;
+  S := GetHTML(FileNameEdit.Text);
+  Memo.Clear;
 
   HtmlParser := THTMLParser.Create;
   try
@@ -99,13 +116,6 @@ begin
 
   Memo.SelStart := 0;
   Memo.SelLength := 0;
-end;
-
-procedure THTMLForm.TopPanelResize(Sender: TObject);
-begin
-  OpenButton.Left := TopPanel.Width - 70;
-  BrowseButton.Left := OpenButton.Left - 42;
-  FileNameEdit.Width := BrowseButton.Left - FileNameEdit.Left;
 end;
 
 end.
