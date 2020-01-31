@@ -27,6 +27,7 @@ type
     procedure ProcessElementStart(Sender: TObject);
     procedure ProcessEndElement(Sender: TObject);
     procedure ProcessEntityReference(Sender: TObject);
+    procedure ProcessScript(Sender: TObject);
     procedure ProcessTextNode(Sender: TObject);
   public
     constructor Create;
@@ -59,6 +60,7 @@ begin
     OnElementStart := ProcessElementStart;
     OnEndElement := ProcessEndElement;
     OnEntityReference := ProcessEntityReference;
+    OnScript := ProcessScript;
     //OnNotation := ProcessNotation;
     //OnProcessingInstruction := ProcessProcessingInstruction;
     OnTextNode := ProcessTextNode;
@@ -260,7 +262,15 @@ begin
   FCurrentNode.AppendChild(EntityReference);
 end;
 
-procedure THTMLParser.ProcessTextNode(Sender: TObject);
+procedure THtmlParser.ProcessScript(Sender: TObject);
+var
+  Script: TScript;
+begin
+  Script := FHtmlDocument.CreateScript(FHtmlReader.NodeValue);
+  FCurrentNode.AppendChild(Script);
+end;
+
+procedure THtmlParser.ProcessTextNode(Sender: TObject);
 var
   TextNode: TTextNode;
 begin

@@ -35,6 +35,7 @@ type
     FOnEntityReference: TNotifyEvent;
     FOnNotation: TNotifyEvent;
     FOnProcessingInstruction: TNotifyEvent;
+    FOnScript: TNotifyEvent;
     FOnTextNode: TNotifyEvent;
     function GetNodeName: string;
     function GetToken(Delimiters: TDelimiters): string;
@@ -53,6 +54,7 @@ type
     function IsStartDocumentType: Boolean;
     function IsStartEntityChar: Boolean;
     function IsStartMarkupChar: Boolean;
+    function IsStartScript: Boolean;
     function IsStartTagChar: Boolean;
     function Match(const Signature: string; IgnoreCase: Boolean): Boolean;
     function ReadAttrNode: Boolean;
@@ -66,6 +68,7 @@ type
     function ReadNamedEntityNode: Boolean;
     function ReadNumericEntityNode: Boolean;
     function ReadQuotedValue(var Value: string): Boolean;
+    function ReadScript: Boolean;
     function ReadSpecialNode: Boolean;
     function ReadTagNode: Boolean;
     function ReadValueNode: Boolean;
@@ -102,6 +105,7 @@ type
     property OnEntityReference: TNotifyEvent read FOnEntityReference write FOnEntityReference;
     property OnNotation: TNotifyEvent read FOnNotation write FOnNotation;
     property OnProcessingInstruction: TNotifyEvent read FOnProcessingInstruction write FOnProcessingInstruction;
+    property OnScript: TNotifyEvent read FOnScript write FOnScript;
     property OnTextNode: TNotifyEvent read FOnTextNode write FOnTextNode;
   end;
 
@@ -136,6 +140,8 @@ const
   CDataEndStr = ']]>';
   CommentStartStr = '--';
   CommentEndStr = '-->';
+  ScriptStartStr = 'script';
+  ScriptEndStr = '</script>';
 
 function DecValue(const Digit: WideChar): Word;
 begin
@@ -291,7 +297,12 @@ begin
   Result := (Ord(WC) in startMarkup);
 end;
 
-function THTMLReader.IsStartTagChar: Boolean;
+function THtmlReader.IsStartScript: Boolean;
+begin
+  Result := Match(ScriptStartStr, true);
+end;
+
+function THtmlReader.IsStartTagChar: Boolean;
 var
   WC: WideChar;
 begin
@@ -539,7 +550,22 @@ begin
   if Result then Value := Copy(FHTMLStr, Start, FPosition - Start);
 end;
 
-function THTMLReader.ReadSpecialNode: Boolean;
+function THtmlReader.ReadScript: Boolean;
+var
+  StartPos: Integer;
+begin
+  Inc(FPosition, Length(ScriptStartStr));
+  StartPos := FPosition;
+  Result := SkipTo(ScriptEndStr);
+  if Result then
+  begin
+    FNodeType := SCRIPT_NODE;
+    FNodeValue := Copy(FHtmlStr, StartPos, FPosition - StartPos - Length(ScriptEndStr));
+    FireEvent(FOnScript)
+  end
+end;
+
+function THtmlReader.ReadSpecialNode: Boolean;
 begin
   Result := False;
 
@@ -563,6 +589,7 @@ begin
 
   if IsSlashChar then Result := ReadEndElementNode
   else if IsSpecialTagChar then Result := ReadSpecialNode
+  else if IsStartScript then Result := ReadScript
   else Result := ReadElementNode;
 
   if not Result then FPosition := CurrPos;
