@@ -24,7 +24,7 @@ type
     procedure TopPanelResize(Sender: TObject);
     procedure UseXPathButtonClick(Sender: TObject);
   private
-    HtmlParser: THtmlParser;
+    HtmlParser: THTMLParser;
   end;
 
 var
@@ -39,8 +39,7 @@ uses
 
 procedure THTMLForm.BrowseButtonClick(Sender: TObject);
 begin
-  if OpenDialog.Execute then
-    FileNameEdit.Text := OpenDialog.FileName
+  if OpenDialog.Execute then FileNameEdit.Text := OpenDialog.FileName
 end;
 
 procedure THTMLForm.UseXPathButtonClick(Sender: TObject);
@@ -82,7 +81,7 @@ begin
     FreeAndNil(F);
   end;
 
-  HtmlParser := THtmlParser.Create;
+  HtmlParser := THTMLParser.Create;
   try
     HtmlDoc := HtmlParser.parseString(S);
   finally

@@ -295,7 +295,7 @@ var
 
 function EntCompare(Ent1, Ent2: Pointer): Integer;
 begin
-  Result := CompareStr(PEntity(Ent1)^.Name, PEntity(Ent2)^.Name)
+  Result := CompareStr(PEntity(Ent1)^.Name, PEntity(Ent2)^.Name);
 end;
 
 constructor TEntList.Create;
@@ -303,10 +303,10 @@ var
   I: Integer;
 begin
   inherited Create;
+
   Capacity := EntCount;
-  for I := 0 to EntCount - 1 do
-    Add(@EntTab[I]);
-  Sort(EntCompare)
+  for I := 0 to EntCount - 1 do Add(@EntTab[I]);
+  Sort(EntCompare);
 end;
 
 function TEntList.GetCode(const Name: String): Integer;
@@ -324,12 +324,12 @@ begin
       Result := PEntity(Items[I])^.Code;
       Exit
     end;
-    if Cmp < 0 then
-      U := I - 1
-    else
-      L := I + 1
+
+    if Cmp < 0 then U := I - 1
+    else L := I + 1;
   end;
-  Result := 32
+
+  Result := 32;
 end;
 
 function GetEntValue(const Name: String): WideChar;
@@ -342,20 +342,19 @@ var
   I: Integer;
 begin
   for I := 0 to EntCount - 1 do
+  begin
     if EntTab[I].Code = Code then
     begin
       Result := EntTab[I].Name;
       Exit
     end;
-  Result := ''
+  end;
+
+  Result := '';
 end;
 
 initialization
-
-  EntityList := TEntList.Create
-
+  EntityList := TEntList.Create;
 finalization
-
   EntityList.Free
-  
 end.

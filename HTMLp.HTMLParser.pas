@@ -6,15 +6,15 @@ uses
   HTMLp.DomCore, HTMLp.HtmlReader, HTMLp.HtmlTags;
 
 type
-  THtmlParser = class
+  THTMLParser = class
   private
     FHtmlDocument: TDocument;
-    FHtmlReader: THtmlReader;
+    FHtmlReader: THTMLReader;
     FCurrentNode: TNode;
-    FCurrentTag: THtmlTag;
+    FCurrentTag: THTMLTag;
     function FindDefParent: TElement;
     function FindParent: TElement;
-    function FindParentElement(tagList: THtmlTagSet): TElement;
+    function FindParentElement(tagList: THTMLTagSet): TElement;
     function FindTableParent: TElement;
     function FindThisElement: TElement;
     function GetMainElement(const tagName: WideString): TElement;
@@ -44,11 +44,11 @@ const
   headTagName = 'head';
   bodyTagName = 'body';
 
-constructor THtmlParser.Create;
+constructor THTMLParser.Create;
 begin
   inherited Create;
 
-  FHtmlReader := THtmlReader.Create;
+  FHtmlReader := THTMLReader.Create;
   with FHtmlReader do
   begin
     OnAttributeEnd := ProcessAttributeEnd;
@@ -67,41 +67,41 @@ begin
   end
 end;
 
-destructor THtmlParser.Destroy;
+destructor THTMLParser.Destroy;
 begin
   FHtmlReader.Free;
 
-  inherited Destroy
+  inherited Destroy;
 end;
 
-function THtmlParser.FindDefParent: TElement;
+function THTMLParser.FindDefParent: TElement;
 begin
   if FCurrentTag.Number in [HEAD_TAG, BODY_TAG] then Result := FHtmlDocument.AppendChild(FHtmlDocument.CreateElement(htmlTagName)) as TElement
   else if FCurrentTag.Number in HeadTags then Result := GetMainElement(headTagName)
-  else Result := GetMainElement(bodyTagName)
+  else Result := GetMainElement(bodyTagName);
 end;
 
-function THtmlParser.FindParent: TElement;
+function THTMLParser.FindParent: TElement;
 begin
   if (FCurrentTag.Number = P_TAG) or (FCurrentTag.Number in BlockTags) then Result := FindParentElement(BlockParentTags)
-  else if FCurrentTag.Number = LI_TAG then Result := FindParentElement(ListItemParentTags)
+  else if FCurrentTag.Number in [LI_TAG] then Result := FindParentElement(ListItemParentTags)
   else if FCurrentTag.Number in [DD_TAG, DT_TAG] then Result := FindParentElement(DefItemParentTags)
   else if FCurrentTag.Number in [TD_TAG, TH_TAG] then Result := FindParentElement(CellParentTags)
-  else if FCurrentTag.Number = TR_TAG then Result := FindParentElement(RowParentTags)
-  else if FCurrentTag.Number = COL_TAG then Result := FindParentElement(ColParentTags)
+  else if FCurrentTag.Number in [TR_TAG] then Result := FindParentElement(RowParentTags)
+  else if FCurrentTag.Number in [COL_TAG] then Result := FindParentElement(ColParentTags)
   else if FCurrentTag.Number in [COLGROUP_TAG, THEAD_TAG, TFOOT_TAG, TBODY_TAG] then Result := FindParentElement(TableSectionParentTags)
-  else if FCurrentTag.Number = TABLE_TAG then Result := FindTableParent
-  else if FCurrentTag.Number = OPTION_TAG then Result := FindParentElement(OptionParentTags)
+  else if FCurrentTag.Number in [TABLE_TAG] then Result := FindTableParent
+  else if FCurrentTag.Number in [OPTION_TAG] then Result := FindParentElement(OptionParentTags)
   else if FCurrentTag.Number in [HEAD_TAG, BODY_TAG] then Result := FHtmlDocument.DocumentElement as TElement
   else Result := nil;
 
-  if Result = nil then Result := FindDefParent
+  if Result = nil then Result := FindDefParent;
 end;
 
-function THtmlParser.FindParentElement(tagList: THtmlTagSet): TElement;
+function THTMLParser.FindParentElement(tagList: THTMLTagSet): TElement;
 var
   Node: TNode;      
-  HtmlTag: THtmlTag;
+  HtmlTag: THTMLTag;
 begin
   Node := FCurrentNode;
 
@@ -112,19 +112,19 @@ begin
     if HtmlTag.Number in tagList then
     begin
       Result := Node as TElement;
-      Exit
+      Exit;
     end;
 
-    Node := Node.ParentNode
+    Node := Node.ParentNode;
   end;
 
-  Result := nil
+  Result := nil;
 end;
 
-function THtmlParser.FindTableParent: TElement;
+function THTMLParser.FindTableParent: TElement;
 var
   Node: TNode;
-  HtmlTag: THtmlTag;
+  HtmlTag: THTMLTag;
 begin
   Node := FCurrentNode;
 
@@ -135,16 +135,16 @@ begin
     if (HtmlTag.Number = TD_TAG) or (HtmlTag.Number in BlockTags) then
     begin
       Result := (Node as TElement);
-      Exit
+      Exit;
     end;
 
-    Node := Node.ParentNode
+    Node := Node.ParentNode;
   end;
 
-  Result := GetMainElement(bodyTagName)
+  Result := GetMainElement(bodyTagName);
 end;
 
-function THtmlParser.FindThisElement: TElement;
+function THTMLParser.FindThisElement: TElement;
 var
   Node: TNode;
 begin
@@ -155,18 +155,18 @@ begin
     Result := (Node as TElement);
     if Result.TagName = FHtmlReader.Name then Exit;
 
-    Node := Node.ParentNode
+    Node := Node.ParentNode;
   end;
 
-  Result := nil
+  Result := nil;
 end;
 
-function THtmlParser.GetMainElement(const tagName: WideString): TElement;
+function THTMLParser.GetMainElement(const tagName: WideString): TElement;
 var
   child: TNode;
   I: Integer;
 begin
-  if FHtmlDocument.DocumentElement = nil then FHtmlDocument.AppendChild(FHtmlDocument.CreateElement(htmlTagName));
+  if (FHtmlDocument.DocumentElement = nil) then FHtmlDocument.AppendChild(FHtmlDocument.CreateElement(htmlTagName));
 
   for I := 0 to FHtmlDocument.DocumentElement.ChildNodes.Count - 1 do
   begin
@@ -181,24 +181,24 @@ begin
   end;
 
   Result := FHtmlDocument.CreateElement(tagName);
-  FHtmlDocument.DocumentElement.AppendChild(Result)
+  FHtmlDocument.DocumentElement.AppendChild(Result);
 end;
 
-procedure THtmlParser.ProcessAttributeEnd(Sender: TObject);
+procedure THTMLParser.ProcessAttributeEnd(Sender: TObject);
 begin
-  FCurrentNode := (FCurrentNode as TAttr).OwnerElement
+  FCurrentNode := (FCurrentNode as TAttr).OwnerElement;
 end;
 
-procedure THtmlParser.ProcessAttributeStart(Sender: TObject);
+procedure THTMLParser.ProcessAttributeStart(Sender: TObject);
 var
   Attr: TAttr;
 begin
-  Attr := FHtmlDocument.CreateAttribute((Sender as THtmlReader).Name);
+  Attr := FHtmlDocument.CreateAttribute((Sender as THTMLReader).Name);
   (FCurrentNode as TElement).SetAttributeNode(Attr);
   FCurrentNode := Attr;
 end;
 
-procedure THtmlParser.ProcessCDataSection(Sender: TObject);
+procedure THTMLParser.ProcessCDataSection(Sender: TObject);
 var
   CDataSection: TCDataSection;
 begin
@@ -206,61 +206,60 @@ begin
   FCurrentNode.AppendChild(CDataSection)
 end;
 
-procedure THtmlParser.ProcessComment(Sender: TObject);
+procedure THTMLParser.ProcessComment(Sender: TObject);
 var
   Comment: TComment;
 begin
   Comment := FHtmlDocument.CreateComment(FHtmlReader.NodeValue);
-  FCurrentNode.AppendChild(Comment)
+  FCurrentNode.AppendChild(Comment);
 end;
 
-procedure THtmlParser.ProcessDocType(Sender: TObject);
+procedure THTMLParser.ProcessDocType(Sender: TObject);
 begin
   with FHtmlReader do FHtmlDocument.Doctype := DomImplementation.CreateDocumentType(Name, PublicID, SystemID);
 end;
 
-procedure THtmlParser.ProcessElementEnd(Sender: TObject);
+procedure THTMLParser.ProcessElementEnd(Sender: TObject);
 begin
-  if FHtmlReader.isEmptyElement or (FCurrentTag.Number in EmptyTags) then FCurrentNode := FCurrentNode.ParentNode;
-  FCurrentTag := nil
+  if FHtmlReader.isEmptyElement
+    or (FCurrentTag.Number in EmptyTags) then FCurrentNode := FCurrentNode.ParentNode;
+
+  FCurrentTag := nil;
 end;
 
-procedure THtmlParser.ProcessElementStart(Sender: TObject);
+procedure THTMLParser.ProcessElementStart(Sender: TObject);
 var
   Element: TElement;
   Parent: TNode;
 begin
   FCurrentTag := HtmlTagList.GetTagByName(FHtmlReader.Name);
-  if FCurrentTag.Number in NeedFindParentTags + BlockTags then
+  if FCurrentTag.Number in (NeedFindParentTags + BlockTags) then
   begin
     Parent := FindParent;
     if not Assigned(Parent) then raise DomException.Create(HIERARCHY_REQUEST_ERR);
-    FCurrentNode := Parent
+    FCurrentNode := Parent;
   end;
 
   Element := FHtmlDocument.CreateElement(FHtmlReader.Name);
   FCurrentNode.AppendChild(Element);
-  FCurrentNode := Element
+  FCurrentNode := Element;
 end;
 
-procedure THtmlParser.ProcessEndElement(Sender: TObject);
+procedure THTMLParser.ProcessEndElement(Sender: TObject);
 var
   Element: TElement;
 begin
   Element := FindThisElement;
-  if Assigned(Element) then
-    FCurrentNode := Element.ParentNode
-{  else
-  if IsBlockTagName(FHtmlReader.nodeName) then
-    raise DomException.Create(HIERARCHY_REQUEST_ERR)}
+  if Assigned(Element) then FCurrentNode := Element.ParentNode
+  // else if IsBlockTagName(FHtmlReader.nodeName) then raise DomException.Create(HIERARCHY_REQUEST_ERR);
 end;
 
-procedure THtmlParser.ProcessEntityReference(Sender: TObject);
+procedure THTMLParser.ProcessEntityReference(Sender: TObject);
 var
   EntityReference: TEntityReference;
 begin
   EntityReference := FHtmlDocument.CreateEntityReference(FHtmlReader.Name);
-  FCurrentNode.AppendChild(EntityReference)
+  FCurrentNode.AppendChild(EntityReference);
 end;
 
 procedure THtmlParser.ProcessScript(Sender: TObject);
@@ -276,10 +275,10 @@ var
   TextNode: TTextNode;
 begin
   TextNode := FHtmlDocument.CreateTextNode(FHtmlReader.NodeValue);
-  FCurrentNode.AppendChild(TextNode)
+  FCurrentNode.AppendChild(TextNode);
 end;
 
-function THtmlParser.ParseString(const htmlStr: WideString): TDocument;
+function THTMLParser.ParseString(const htmlStr: WideString): TDocument;
 begin
   FHtmlReader.HTMLStr := htmlStr;
   FHtmlDocument := DomImplementation.CreateEmptyDocument(nil);
@@ -290,7 +289,7 @@ begin
     // TODO: Add event ?
   end;
 
-  Result := FHtmlDocument
+  Result := FHtmlDocument;
 end;
 
 end.

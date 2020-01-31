@@ -102,7 +102,7 @@ const
   CRLF: WideString = #13#10;
   PARAGRAPH_SEPARATOR: WideString = #13#10#13#10;
 
-  ViewAsBlockTags: THtmlTagSet = [
+  ViewAsBlockTags: THTMLTagSet = [
     ADDRESS_TAG, BLOCKQUOTE_TAG, CAPTION_TAG, CENTER_TAG, DD_TAG, DIV_TAG,
     DL_TAG, DT_TAG, FIELDSET_TAG, FORM_TAG, FRAME_TAG, H1_TAG, H2_TAG, H3_TAG,
     H4_TAG, H5_TAG, H6_TAG, HR_TAG, IFRAME_TAG, LI_TAG, NOFRAMES_TAG, NOSCRIPT_TAG,
@@ -111,7 +111,7 @@ const
 
 function IsWhiteSpace(W: WideChar): Boolean;
 begin
-  Result := Ord(W) in WhiteSpace
+  Result := (Ord(W) in WhiteSpace);
 end;
 
 function normalizeWhiteSpace(const TextStr: WideString): WideString;
@@ -119,6 +119,7 @@ var
   I, J, Count: Integer;
 begin
   SetLength(Result, Length(TextStr));
+
   J := 0;
   Count := 0;
   for I := 1 to Length(TextStr) do
@@ -132,17 +133,20 @@ begin
     begin
       Count := 0;
       Inc(J);
-      Result[J] := ' '
+      Result[J] := ' ';
     end;
+
     Inc(J);
-    Result[J] := TextStr[I]
+    Result[J] := TextStr[I];
   end;
+
   if Count <> 0 then
   begin
     Inc(J);
     Result[J] := ' '
   end;
-  SetLength(Result, J)
+
+  SetLength(Result, J);
 end;
 
 function Spaces(Count: Integer): WideString;
@@ -150,8 +154,7 @@ var
   I: Integer;
 begin
   SetLength(Result, Count);
-  for I := 1 to Count do
-    Result[I] := ' '
+  for I := 1 to Count do Result[I] := ' ';
 end;
 
 function TrimLeftSpaces(const S: WideString): WideString;
@@ -159,21 +162,20 @@ var
   I: Integer;
 begin
   I := 1;
-  while (I <= Length(S)) and (Ord(S[I]) = SP) do
-    Inc(I);
-  Result := Copy(S, I, Length(S) - I + 1)
+  while (I <= Length(S)) and (Ord(S[I]) = SP) do Inc(I);
+  Result := Copy(S, I, Length(S) - I + 1);
 end;
 
 constructor TStringBuilder.Create(ACapacity: Integer);
 begin
   inherited Create;
   FCapacity := ACapacity;
-  SetLength(FValue, FCapacity)
+  SetLength(FValue, FCapacity);
 end;
 
 function TStringBuilder.EndWithWhiteSpace: Boolean;
 begin
-  Result := IsWhiteSpace(FValue[FLength])
+  Result := IsWhiteSpace(FValue[FLength]);
 end;
 
 function TStringBuilder.TailMatch(const Tail: WideString): Boolean;
@@ -182,18 +184,20 @@ var
 begin
   Result := false;
   TailLen := System.Length(Tail);
-  if TailLen > FLength then
-    Exit;
+  if TailLen > FLength then Exit;
+
   for I := 1 to TailLen do
-    if FValue[FLength - TailLen + I] <> Tail[I] then
-      Exit;
-  Result := true
+  begin
+    if FValue[FLength - TailLen + I] <> Tail[I] then Exit;
+  end;
+
+  Result := True;
 end;
 
 function TStringBuilder.ToString: WideString;
 begin
   SetLength(FValue, FLength);
-  Result := FValue
+  Result := FValue;
 end;
 
 procedure TStringBuilder.AppendText(const TextStr: WideString);
@@ -206,15 +210,14 @@ begin
     SetLength(FValue, FCapacity)
   end;
   TextLen := System.Length(TextStr);
-  for I := 1 to TextLen do
-    FValue[FLength + I] := TextStr[I];
-  Inc(FLength, TextLen)
+  for I := 1 to TextLen do FValue[FLength + I] := TextStr[I];
+  Inc(FLength, TextLen);
 end;
 
 constructor TBaseFormatter.Create;
 begin
   inherited Create;
-  FWhatToShow := Integer(SHOW_ALL)
+  FWhatToShow := Integer(SHOW_ALL);
 end;
                                     
 procedure TBaseFormatter.ProcessNode(Node: TNode);
@@ -234,33 +237,29 @@ procedure TBaseFormatter.AppendNewLine;
 begin                                 
   if FStringBuilder.Length > 0 then
   begin
-    if not FStringBuilder.TailMatch(CRLF) then
-      FStringBuilder.AppendText(CRLF)
-  end
+    if not FStringBuilder.TailMatch(CRLF) then FStringBuilder.AppendText(CRLF)
+  end;
 end;
 
 procedure TBaseFormatter.AppendParagraph;
 begin
   if FStringBuilder.Length > 0 then
   begin
-    if not FStringBuilder.TailMatch(CRLF) then
-      FStringBuilder.AppendText(PARAGRAPH_SEPARATOR)
-    else
-    if not FStringBuilder.TailMatch(PARAGRAPH_SEPARATOR) then
-      FStringBuilder.AppendText(CRLF)
+    if not FStringBuilder.TailMatch(CRLF) then FStringBuilder.AppendText(PARAGRAPH_SEPARATOR)
+    else if not FStringBuilder.TailMatch(PARAGRAPH_SEPARATOR) then FStringBuilder.AppendText(CRLF);
   end
 end;
 
 procedure TBaseFormatter.AppendText(const TextStr: WideString);
 begin
-  FStringBuilder.AppendText(TextStr)
+  FStringBuilder.AppendText(TextStr);
 end;
 
 procedure TBaseFormatter.ProcessAttribute(Attr: TAttr);
 var
   I: Integer;
 begin
-  for I := 0 to Attr.ChildNodes.Count - 1 do ProcessNode(Attr.ChildNodes.Items[I])
+  for I := 0 to Attr.ChildNodes.Count - 1 do ProcessNode(Attr.ChildNodes.Items[I]);
 end;
 
 procedure TBaseFormatter.ProcessAttributes(Element: TElement);
@@ -270,9 +269,8 @@ begin
   if (FWhatToShow and SHOW_ATTRIBUTE) <> 0 then
   begin
     FInAttributes := true;
-    for I := 0 to Element.Attributes.Count - 1 do
-      ProcessAttribute(Element.Attributes.Items[I] as TAttr);
-    FInAttributes := false
+    for I := 0 to Element.Attributes.Count - 1 do ProcessAttribute(Element.Attributes.Items[I] as TAttr);
+    FInAttributes := False;
   end
 end;
 
@@ -285,7 +283,7 @@ procedure TBaseFormatter.ProcessComment(Comment: TComment);
 begin
   AppendText('<!--');
   AppendText(Comment.Data);
-  AppendText('-->')
+  AppendText('-->');
 end;
 
 procedure TBaseFormatter.ProcessDocumentElement;
@@ -294,7 +292,7 @@ begin
   begin
     FDepth := 0;
     ProcessElement(FDocument.DocumentElement)
-  end
+  end;
 end;
 
 procedure TBaseFormatter.ProcessElement(Element: TElement);
@@ -302,17 +300,14 @@ var
   I: Integer;
 begin
   Inc(FDepth);
-  for I := 0 to Element.ChildNodes.Count - 1 do
-    ProcessNode(Element.ChildNodes.Items[I]);
+  for I := 0 to Element.ChildNodes.Count - 1 do ProcessNode(Element.ChildNodes.Items[I]);
   Dec(FDepth)
 end;
 
 procedure TBaseFormatter.ProcessEntityReference(EntityReference: TEntityReference);
 begin
-  if FExpandEntities then
-    AppendText(GetEntValue(EntityReference.Name))
-  else
-    AppendText('&' + EntityReference.Name + ';')
+  if FExpandEntities then AppendText(GetEntValue(EntityReference.Name))
+  else AppendText('&' + EntityReference.Name + ';');
 end;
 {
 procedure TBaseFormatter.ProcessNotation(Notation: TNotation);
@@ -327,7 +322,7 @@ end;
 
 procedure TBaseFormatter.ProcessTextNode(TextNode: TTextNode);
 begin
-  AppendText(TextNode.Data)
+  AppendText(TextNode.Data);
 end;
 
 function TBaseFormatter.getText(document: TDocument): WideString;
@@ -336,9 +331,9 @@ begin
   FStringBuilder := TStringBuilder.Create(65530);
   try
     ProcessDocumentElement;
-    Result := FStringBuilder.ToString
+    Result := FStringBuilder.ToString;
   finally
-    FStringBuilder.Free
+    FStringBuilder.Free;
   end
 end;
                        
@@ -346,7 +341,7 @@ constructor THtmlFormatter.Create;
 begin
   inherited Create;
 
-  FIndent := 2
+  FIndent := 2;
 end;
 
 function THtmlFormatter.OnlyTextContent(Element: TElement): Boolean;
@@ -371,9 +366,9 @@ begin
   begin
     AppendText(' ' + Attr.Name + '="');
     inherited ProcessAttribute(Attr);
-    AppendText('"')
+    AppendText('"');
   end
-  else AppendText(' ' + Attr.Name + '="' + Attr.Name + '"')
+  else AppendText(' ' + Attr.Name + '="' + Attr.Name + '"');
 end;
                                          
 procedure THtmlFormatter.ProcessComment(Comment: TComment);
@@ -386,42 +381,42 @@ end;
 
 procedure THtmlFormatter.ProcessElement(Element: TElement);
 var
-  HtmlTag: THtmlTag;
+  HtmlTag: THTMLTag;
 begin
   HtmlTag := HtmlTagList.GetTagByName(Element.TagName);
   AppendNewLine;
   AppendText(Spaces(FIndent * FDepth));
   AppendText('<' + Element.TagName);
   ProcessAttributes(Element);
+
   if Element.HasChildNodes then
   begin
-    AppendText('>');            
-    if HtmlTag.Number in PreserveWhiteSpaceTags then
-      FPreserveWhiteSpace := true;
+    AppendText('>');
+
+    if HtmlTag.Number in PreserveWhiteSpaceTags then FPreserveWhiteSpace := True;
     inherited ProcessElement(Element);
-    FPreserveWhiteSpace := false;
+    FPreserveWhiteSpace := False;
+
     if not OnlyTextContent(Element) then
     begin
       AppendNewLine;
       AppendText(Spaces(FIndent * FDepth))
     end;
+
     AppendText('</' + Element.TagName + '>')
   end
-  else
-    AppendText(' />')
+  else AppendText(' />');
 end;
 
 procedure THtmlFormatter.ProcessTextNode(TextNode: TTextNode);
 var
   TextStr: WideString;
 begin
-  if FPreserveWhiteSpace then
-    AppendText(TextNode.Data)
+  if FPreserveWhiteSpace then AppendText(TextNode.Data)
   else
   begin
     TextStr := normalizeWhiteSpace(TextNode.Data);
-    if TextStr <> ' ' then
-      AppendText(TextStr)
+    if TextStr <> ' ' then AppendText(TextStr)
   end;
 end;
 
@@ -429,7 +424,7 @@ constructor TTextFormatter.Create;
 begin
   inherited Create;
   FWhatToShow := SHOW_ELEMENT or SHOW_TEXT or SHOW_ENTITY_REFERENCE;
-  FExpandEntities := true 
+  FExpandEntities := True;
 end;
 
 function TTextFormatter.GetAnchorText(Node: TElement): WideString;
@@ -437,79 +432,80 @@ var
   Attr: TAttr;
 begin
   Result := '';
+
   if Node.HasAttribute('href') then
   begin
     Attr := Node.GetAttributeNode('href');
     Result := ' ';
-    if UrlSchemes.GetScheme(Attr.Value) = '' then
-      Result := Result + 'http://';
-    Result := Result + Attr.Value
+    if UrlSchemes.GetScheme(Attr.Value) = '' then Result := Result + 'http://';
+    Result := Result + Attr.Value;
   end
 end;
 
 function TTextFormatter.GetImageText(Node: TElement): WideString;
 begin
-  if Node.HasAttribute('alt') then
-    Result := Node.GetAttributeNode('alt').Value
-  else
-    Result := ''
+  if Node.HasAttribute('alt') then Result := Node.GetAttributeNode('alt').Value
+  else Result := '';
 end;
 
 procedure TTextFormatter.AppendText(const TextStr: WideString);
 begin
-  if (FStringBuilder.Length = 0) or FStringBuilder.EndWithWhiteSpace then
+  if (FStringBuilder.Length = 0)
+    or FStringBuilder.EndWithWhiteSpace then
+  begin
     inherited AppendText(TrimLeftSpaces(TextStr))
+  end
   else
-    inherited AppendText(TextStr)
+  begin
+    inherited AppendText(TextStr);
+  end;
 end;
 
 procedure TTextFormatter.ProcessElement(Element: TElement);
 var
-  HtmlTag: THtmlTag;
+  HtmlTag: THTMLTag;
 begin
   HtmlTag := HtmlTagList.GetTagByName(Element.TagName);
-  if HtmlTag.Number in ViewAsBlockTags then
-    AppendParagraph;
+  if HtmlTag.Number in ViewAsBlockTags then AppendParagraph;
+
   case HtmlTag.Number of
-    A_TAG:  FInsideAnchor := true;
-    LI_TAG: AppendText('* ')
+    A_TAG:  FInsideAnchor := True;
+    LI_TAG: AppendText('* ');
   end;
-  if HtmlTag.Number in PreserveWhiteSpaceTags then
-    FPreserveWhiteSpace := true;
+
+  if HtmlTag.Number in PreserveWhiteSpaceTags then FPreserveWhiteSpace := True;
   inherited ProcessElement(Element);
-  FPreserveWhiteSpace := false;
+  FPreserveWhiteSpace := False;
+
   case HtmlTag.Number of
     BR_TAG:
       AppendNewLine;
+
     A_TAG:
     begin
       AppendText(GetAnchorText(Element));
       FInsideAnchor := false
     end;
+
     IMG_TAG:
     begin
-      if FInsideAnchor then
-        AppendText(GetImageText(Element))
+      if FInsideAnchor then AppendText(GetImageText(Element));
     end
   end;
-  if HtmlTag.Number in ViewAsBlockTags then
-    AppendParagraph
+
+  if HtmlTag.Number in ViewAsBlockTags then AppendParagraph;
 end;
 
 procedure TTextFormatter.ProcessEntityReference(EntityReference: TEntityReference);
 begin
-  if EntityReference.Name = 'nbsp' then
-    AppendText(' ')
-  else
-    inherited ProcessEntityReference(EntityReference)
+  if EntityReference.Name = 'nbsp' then AppendText(' ')
+  else inherited ProcessEntityReference(EntityReference);
 end;
 
 procedure TTextFormatter.ProcessTextNode(TextNode: TTextNode);
 begin
-  if FPreserveWhiteSpace then
-    AppendText(TextNode.Data)
-  else
-    AppendText(normalizeWhiteSpace(TextNode.Data))
+  if FPreserveWhiteSpace then AppendText(TextNode.Data)
+  else AppendText(normalizeWhiteSpace(TextNode.Data));
 end;
 
 end.

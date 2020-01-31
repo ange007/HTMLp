@@ -139,7 +139,7 @@ type
     property Name: string read GetNodeName;
     property Value: string read GetNodeValue write SetNodeValue;
     property NodeType: Integer read GetNodeType;
-    property ParentNode: TNode read GetParentNode;
+    property ParentNode: TNode read GetParentNode write FParentNode;
     property ChildNodes: TNodeList read GetChildNodes;
     property FirstChild: TNode read GetFirstChild;
     property LastChild: TNode read GetLastChild;
@@ -595,11 +595,11 @@ begin
       SetPrefix(Copy(qualifiedName, 1, I - 1));
       SetLocalName(Copy(qualifiedName, I + 1, Length(qualifiedName) - I))
     end
-    else SetLocalName(qualifiedName)
+    else SetLocalName(qualifiedName);
   end
   else SetLocalName(qualifiedName);
   
-  FChildNodes := TNodeList.Create(Self)
+  FChildNodes := TNodeList.Create(Self);
 end;
 
 destructor TNode.Destroy;
@@ -616,13 +616,13 @@ begin
     FAttributes.Free
   end;
   
-  inherited Destroy
+  inherited Destroy;
 end;
 
 function TNode.GetFirstChild: TNode;
 begin
-  Result := nil;  
-  if ChildNodes.Count <> 0 then Result := ChildNodes.GetItem(0)
+  Result := nil;
+  if ChildNodes.Count <> 0 then Result := ChildNodes.GetItem(0);
 end;
 
 function TNode.GetLastChild: TNode;
@@ -641,7 +641,7 @@ begin
   begin
     I := ParentNode.ChildNodes.IndexOf(Self);
     
-    if I > 0 then Result := ParentNode.ChildNodes.GetItem(I - 1)
+    if I > 0 then Result := ParentNode.ChildNodes.GetItem(I - 1);
   end
 end;
 
@@ -654,8 +654,8 @@ begin
   if Assigned(ParentNode) then
   begin
     I := ParentNode.ChildNodes.IndexOf(Self);
-    
-    if (I >= 0) and (I < ParentNode.ChildNodes.Count - 1) then Result := ParentNode.ChildNodes.GetItem(I + 1)
+
+    if (I >= 0) and (I < ParentNode.ChildNodes.Count - 1) then Result := ParentNode.ChildNodes.GetItem(I + 1);
   end
 end;
 
@@ -702,27 +702,26 @@ end;
 
 procedure TNode.SetNamespaceURI(const value: string);
 begin
-  if value <> '' then
-    //TODO validate
-    FNamespaceURI := OwnerDocument.NamespaceURIList.Add(value)
+  //TODO validate
+  if value <> '' then FNamespaceURI := FOwnerDocument.NamespaceURIList.Add(value);
 end;
 
 function TNode.GetNamespaceURI: string;
 begin
-  Result := OwnerDocument.NamespaceURIList[FNamespaceURI]
+  Result := FOwnerDocument.NamespaceURIList[FNamespaceURI]
 end;
 
 procedure TNode.SetPrefix(const value: string);
 begin
-  if not IsNCName(value) then
-    raise DomException.Create(INVALID_CHARACTER_ERR);
-  FPrefix := value
+  if not IsNCName(value) then raise DomException.Create(INVALID_CHARACTER_ERR);
+
+  FPrefix := value;
 end;
 
 procedure TNode.SetLocalName(const value: string);
 begin
-  if not IsNCName(value) then
-    raise DomException.Create(INVALID_CHARACTER_ERR);
+  if not IsNCName(value) then raise DomException.Create(INVALID_CHARACTER_ERR);
+
   FNodeName := value
 end;
 
@@ -742,7 +741,8 @@ function TNode.InsertSingleNode(newChild, refChild: TNode): TNode;
 var
   I: Integer;
 begin
-  if not CanInsert(newChild) or newChild.AncestorOf(Self) then raise DomException.Create(HIERARCHY_REQUEST_ERR);
+  if not (CanInsert(newChild))
+    or newChild.AncestorOf(Self) then raise DomException.Create(HIERARCHY_REQUEST_ERR);
 
   if newChild <> refChild then
   begin
@@ -763,7 +763,7 @@ end;
 
 function TNode.InsertBefore(newChild, refChild: TNode): TNode;
 begin
-  if newChild.OwnerDocument <> OwnerDocument then raise DomException.Create(WRONG_DOCUMENT_ERR);
+  if newChild.OwnerDocument <> FOwnerDocument then raise DomException.Create(WRONG_DOCUMENT_ERR);
 
   if newChild.NodeType = DOCUMENT_FRAGMENT_NODE then
   begin
@@ -772,7 +772,7 @@ begin
   end
   else Result := InsertSingleNode(newChild, refChild);
 
-  if Assigned(OwnerDocument) then OwnerDocument.InvalidateSearchNodeLists
+  if Assigned(FOwnerDocument) then FOwnerDocument.InvalidateSearchNodeLists
 end;
 
 function TNode.ReplaceChild(newChild, oldChild: TNode): TNode;
@@ -785,14 +785,14 @@ begin
 
   Result := oldChild;
 
-  if Assigned(OwnerDocument) then OwnerDocument.InvalidateSearchNodeLists;
+  if Assigned(FOwnerDocument) then FOwnerDocument.InvalidateSearchNodeLists;
 end;
 
 function TNode.AppendChild(newChild: TNode): TNode;
 begin
   Result := InsertBefore(newChild, nil);
 
-  if Assigned(OwnerDocument) then OwnerDocument.InvalidateSearchNodeLists;
+  if Assigned(FOwnerDocument) then FOwnerDocument.InvalidateSearchNodeLists;
 end;
 
 function TNode.RemoveChild(oldChild: TNode): TNode;
@@ -806,17 +806,17 @@ begin
   oldChild.FParentNode := nil;
   Result := oldChild;
 
-  if Assigned(OwnerDocument) then OwnerDocument.InvalidateSearchNodeLists;
+  if Assigned(FOwnerDocument) then FOwnerDocument.InvalidateSearchNodeLists;
 end;
 
 function TNode.HasChildNodes: Boolean;
 begin
-  Result := FChildNodes.Count <> 0
+  Result := (FChildNodes.Count <> 0);
 end;
                           
 function TNode.IsSupported(const feature, version: string): Boolean;
 begin
-  Result := DOMImplementation.HasFeature(feature, version)
+  Result := DOMImplementation.HasFeature(feature, version);
 end;
 
 function TNode.HasAttributes: Boolean;
@@ -830,7 +830,7 @@ begin
   begin
     if node = self then
     begin
-      Result := true;
+      Result := True;
       Exit
     end;
     
@@ -903,7 +903,6 @@ end;
 function TNode.GetOuterHTML: string;
 var
   I: Integer;
-  childNode: TNode;
 begin
   Result := '';
   
@@ -933,7 +932,7 @@ begin
   inherited Create;
   
   FOwnerNode := AOwnerNode;
-  FList := TList.Create
+  FList := TList.Create;
 end;
 
 destructor TNodeList.Destroy;
@@ -1028,8 +1027,8 @@ end;
 
 destructor TSearchNodeList.Destroy;
 begin
-  if Assigned(ownerNode) and Assigned(ownerNode.OwnerDocument) then
-    ownerNode.OwnerDocument.RemoveSearchNodeList(Self);
+  if Assigned(ownerNode)
+    and Assigned(ownerNode.OwnerDocument) then ownerNode.OwnerDocument.RemoveSearchNodeList(Self);
 
   inherited Destroy
 end;
@@ -1104,14 +1103,13 @@ function TNamedNodeMap.SetNamedItem(arg: TNode): TNode;
 var
   Attr: TAttr;
 begin
-  if arg.OwnerDocument <> Self.ownerNode.OwnerDocument then
-    raise DomException(WRONG_DOCUMENT_ERR);
+  if arg.OwnerDocument <> Self.ownerNode.OwnerDocument then raise DomException(WRONG_DOCUMENT_ERR);
 
   if arg.NodeType = ATTRIBUTE_NODE then
   begin
     Attr := arg as TAttr;
-    if Assigned(Attr.OwnerElement) and (Attr.OwnerElement <> ownerNode) then
-      raise DomException(INUSE_ATTRIBUTE_ERR)
+    if Assigned(Attr.OwnerElement)
+      and (Attr.OwnerElement <> ownerNode) then raise DomException(INUSE_ATTRIBUTE_ERR)
   end;
 
   Result := GetNamedItem(arg.Name);
@@ -1124,10 +1122,10 @@ var
   Node: TNode;
 begin
   Node := GetNamedItem(name);
-  if Node = nil then
-    raise DomException.Create(NOT_FOUND_ERR);
+  if not (Assigned(Node)) then raise DomException.Create(NOT_FOUND_ERR);
+
   Remove(Node);
-  Result := Node
+  Result := Node;
 end;
 
 function TNamedNodeMap.GetNamedItemNS(const namespaceURI, localName: string): TNode;
@@ -1137,28 +1135,30 @@ begin
   for I := 0 to Count - 1 do
   begin
     Result := GetItem(I);
-    if (Result.LocalName = localName) and (Result.NamespaceURI = namespaceURI) then
-      Exit
+    if (Result.LocalName = localName)
+      and (Result.NamespaceURI = namespaceURI) then Exit
   end;
-  Result := nil
+
+  Result := nil;
 end;
 
 function TNamedNodeMap.SetNamedItemNS(arg: TNode): TNode;
 var
   Attr: TAttr;
 begin
-  if arg.OwnerDocument <> Self.ownerNode.OwnerDocument then
-    raise DomException(WRONG_DOCUMENT_ERR);
+  if arg.OwnerDocument <> Self.ownerNode.OwnerDocument then raise DomException(WRONG_DOCUMENT_ERR);
+
   if arg.NodeType = ATTRIBUTE_NODE then
   begin
     Attr := arg as TAttr;
-    if Assigned(Attr.OwnerElement) and (Attr.OwnerElement <> ownerNode) then
-      raise DomException(INUSE_ATTRIBUTE_ERR)
+    if Assigned(Attr.OwnerElement)
+      and (Attr.OwnerElement <> ownerNode) then raise DomException(INUSE_ATTRIBUTE_ERR)
   end;
+
   Result := GetNamedItemNS(arg.NamespaceURI, arg.LocalName);
-  if Assigned(Result) then
-    Remove(Result);
-  Add(arg)
+  if Assigned(Result) then Remove(Result);
+
+  Add(arg);
 end;
 
 function TNamedNodeMap.RemoveNamedItemNS(const namespaceURI, localName: string): TNode;
@@ -1166,8 +1166,8 @@ var
   Node: TNode;
 begin
   Node := GetNamedItemNS(namespaceURI, localName);
-  if Node = nil then
-    raise DomException.Create(NOT_FOUND_ERR);
+  if not (Assigned(Node)) then raise DomException.Create(NOT_FOUND_ERR);
+
   Remove(Node);
   Result := Node
 end;
@@ -1178,7 +1178,7 @@ end;
 
 constructor TEntityReference.Create(ownerDocument: TDocument; const name: string);
 begin
-  inherited Create(OwnerDocument, '', name, false)
+  inherited Create(ownerDocument, '', name, false)
 end;
 
 function TEntityReference.GetNodeType: Integer;
@@ -1193,7 +1193,7 @@ end;
 
 function TEntityReference.CloneNode(deep: Boolean): TNode;
 begin
-  Result := OwnerDocument.CreateEntityReference(Name)
+  Result := FOwnerDocument.CreateEntityReference(Name);
 end;
 
 { =================
@@ -1202,46 +1202,45 @@ end;
 
 constructor TCharacterData.Create(ownerDocument: TDocument; const data: string);
 begin
-  inherited Create(OwnerDocument, '', '', false);
-  SetNodeValue(data)
+  inherited Create(ownerDocument, '', '', False);
+
+  SetNodeValue(data);
 end;
 
 procedure TCharacterData.SetNodeValue(const value: string);
 begin
-  FNodeValue := value
+  FNodeValue := value;
 end;
 
 function TCharacterData.GetLength: Integer;
 begin
-  Result := System.Length(FNodeValue)
+  Result := System.Length(FNodeValue);
 end;
 
 function TCharacterData.SubstringData(offset, count: Integer): string;
 begin
-  if (offset < 0) or (offset >= Length) or (count < 0) then
-    raise DomException(INDEX_SIZE_ERR);
-  Result := Copy(FNodeValue, offset + 1, count)
+  if (offset < 0) or (offset >= Length) or (count < 0) then raise DomException(INDEX_SIZE_ERR);
+  Result := Copy(FNodeValue, offset + 1, count);
 end;
 
 procedure TCharacterData.AppendData(const arg: string);
 begin
-  FNodeValue := FNodeValue + arg
+  FNodeValue := FNodeValue + arg;
 end;
 
 procedure TCharacterData.InsertData(offset: Integer; arg: string);
 begin
-  ReplaceData(offset, 0, arg)
+  ReplaceData(offset, 0, arg);
 end;
 
 procedure TCharacterData.DeleteData(offset, count: Integer);
 begin
-  ReplaceData(offset, count, '')
+  ReplaceData(offset, count, '');
 end;
 
 procedure TCharacterData.ReplaceData(offset, count: Integer; const arg: string);
 begin                                  
-  if (offset < 0) or (offset >= Length) or (count < 0) then
-    raise DomException(INDEX_SIZE_ERR);
+  if (offset < 0) or (offset >= Length) or (count < 0) then raise DomException(INDEX_SIZE_ERR);
   FNodeValue := SubstringData(0, offset) + arg + SubstringData(offset + count, Length - (offset + count))
 end;
 
@@ -1256,17 +1255,17 @@ end;
 
 function TCDATASection.GetNodeType: Integer;
 begin
-  Result := CDATA_SECTION_NODE
+  Result := CDATA_SECTION_NODE;
 end;
                       
 function TCDATASection.ExportNode(otherDocument: TDocument; deep: Boolean): TNode;
 begin
-  Result := otherDocument.CreateCDATASection(Data)
+  Result := otherDocument.CreateCDATASection(Data);
 end;
 
 function TCDATASection.CloneNode(deep: Boolean): TNode;
 begin
-  Result := OwnerDocument.CreateCDATASection(Data)
+  Result := FOwnerDocument.CreateCDATASection(Data);
 end;
 
 { =================
@@ -1280,17 +1279,17 @@ end;
 
 function TComment.GetNodeType: Integer;
 begin
-  Result := COMMENT_NODE
+  Result := COMMENT_NODE;
 end;
 
 function TComment.ExportNode(otherDocument: TDocument; deep: Boolean): TNode;
 begin
-  Result := otherDocument.CreateComment(Data)
+  Result := otherDocument.CreateComment(Data);
 end;
 
 function TComment.CloneNode(deep: Boolean): TNode;
 begin
-  Result := OwnerDocument.CreateComment(Data)
+  Result := FOwnerDocument.CreateComment(Data);
 end;
 
 { =================
@@ -1304,25 +1303,24 @@ end;
 
 function TTextNode.GetNodeType: Integer;
 begin
-  Result := TEXT_NODE
+  Result := TEXT_NODE;
 end;
                   
 function TTextNode.ExportNode(otherDocument: TDocument; deep: Boolean): TNode;
 begin
-  Result := otherDocument.CreateTextNode(Data)
+  Result := otherDocument.CreateTextNode(Data);
 end;
 
 function TTextNode.CloneNode(deep: Boolean): TNode;
 begin
-  Result := OwnerDocument.CreateTextNode(Data)
+  Result := FOwnerDocument.CreateTextNode(Data);
 end;
 
 function TTextNode.SplitText(offset: Integer): TTextNode;
 begin
-  Result := OwnerDocument.CreateTextNode(SubstringData(offset, Length - offset));
+  Result := FOwnerDocument.CreateTextNode(SubstringData(offset, Length - offset));
   DeleteData(offset, Length - offset);
-  if Assigned(ParentNode) then
-    InsertBefore(Result, NextSibling)
+  if Assigned(ParentNode) then InsertBefore(Result, NextSibling);
 end;
 
 { =================
@@ -1331,7 +1329,7 @@ end;
 
 function TAttr.GetOwnerElement: TElement;
 begin
-  Result := FParentNode as TElement
+  Result := FParentNode as TElement;
 end;
 
 function TAttr.GetLength: Integer;
@@ -1345,7 +1343,7 @@ begin
   begin
     Node := ChildNodes.GetItem(I);
     if Node.NodeType = TEXT_NODE then Inc(Result, (Node as TTextNode).Length)
-    else if Node.NodeType = ENTITY_REFERENCE_NODE then Inc(Result)
+    else if Node.NodeType = ENTITY_REFERENCE_NODE then Inc(Result);
   end
 end;
 
@@ -1365,31 +1363,31 @@ begin
       for J := 1 to (Node as TTextNode).Length do
       begin
         Inc(Pos);
-        Result[Pos] := Node.FNodeValue[J]
+        Result[Pos] := Node.FNodeValue[J];
       end
     else
     if Node.NodeType = ENTITY_REFERENCE_NODE then
     begin
       Inc(Pos);
-      Result[Pos] := GetEntValue(Node.Name)
+      Result[Pos] := GetEntValue(Node.Name);
     end
   end
 end;
 
 function TAttr.GetNodeType: Integer;
 begin
-  Result := ATTRIBUTE_NODE
+  Result := ATTRIBUTE_NODE;
 end;
 
 procedure TAttr.SetNodeValue(const value: string);
 begin
-  FChildNodes.Clear(false);
-  AppendChild(OwnerDocument.CreateTextNode(value))
+  FChildNodes.Clear(False);
+  AppendChild(FOwnerDocument.CreateTextNode(value))
 end;
 
 function TAttr.GetParentNode: TNode;
 begin
-  Result := nil
+  Result := nil;
 end;
               
 function TAttr.GetSpecified: Boolean;
@@ -1399,19 +1397,19 @@ end;
 
 function TAttr.CanInsert(node: TNode): Boolean;
 begin
-  Result := node.NodeType in [ENTITY_REFERENCE_NODE, TEXT_NODE]
+  Result := node.NodeType in [ENTITY_REFERENCE_NODE, TEXT_NODE];
 end;
                         
 function TAttr.ExportNode(ownerDocument: TDocument; deep: Boolean): TNode;
 begin
   Result := ownerDocument.CreateAttribute(Name);
-  Result.CloneChildNodesFrom(Self)
+  Result.CloneChildNodesFrom(Self);
 end;
 
 function TAttr.CloneNode(deep: Boolean): TNode;
 begin
-  Result := OwnerDocument.CreateAttribute(Name);
-  Result.CloneChildNodesFrom(Self)
+  Result := FOwnerDocument.CreateAttribute(Name);
+  Result.CloneChildNodesFrom(Self);
 end;
 
 { =================
@@ -1505,14 +1503,14 @@ function TElement.ExportNode(otherDocument: TDocument; deep: Boolean): TNode;
 begin
   Result := otherDocument.CreateElement(TagName);
 
-  if deep then Result.CloneChildNodesFrom(Self)
+  if deep then Result.CloneChildNodesFrom(Self);
 end;
 
 function TElement.CloneNode(deep: Boolean): TNode;
 begin
-  Result := OwnerDocument.CreateElement(TagName);
+  Result := FOwnerDocument.CreateElement(TagName);
 
-  if deep then Result.CloneChildNodesFrom(Self)
+  if deep then Result.CloneChildNodesFrom(Self);
 end;
 
 
@@ -1575,8 +1573,9 @@ procedure TElement.SetAttribute(const name, value: string);
 var
   newAttr: TAttr;
 begin
-  newAttr := OwnerDocument.CreateAttribute(name);
+  newAttr := FOwnerDocument.CreateAttribute(name);
   newAttr.Value := value;
+
   SetAttributeNode(newAttr);
 end;
 
@@ -1585,16 +1584,16 @@ begin
   if Assigned(newAttr.OwnerElement) then raise DomException.Create(INUSE_ATTRIBUTE_ERR);
 
   Result := Attributes.SetNamedItem(newAttr) as TAttr;
-  if Assigned(Result) then Result.FParentNode := nil;
+  if Assigned(Result) then Result.ParentNode := nil;
 
-  newAttr.FParentNode := Self;
+  newAttr.ParentNode := Self;
 end;
 
 function TElement.RemoveAttributeNode(oldAttr: TAttr): TAttr;
 begin
   if Attributes.IndexOf(oldAttr) < 0 then raise DomException.Create(NOT_FOUND_ERR);
   Attributes.Remove(oldAttr);
-  oldAttr.FParentNode := nil;
+  oldAttr.ParentNode := nil;
 
   Result := oldAttr;
 end;
@@ -1631,9 +1630,10 @@ procedure TElement.SetAttributeNS(const namespaceURI, qualifiedName, value: stri
 var
   newAttr: TAttr;
 begin
-  newAttr := OwnerDocument.CreateAttributeNS(namespaceURI, qualifiedName);
+  newAttr := FOwnerDocument.CreateAttributeNS(namespaceURI, qualifiedName);
   newAttr.Value := value;
-  SetAttributeNodeNS(newAttr)
+
+  SetAttributeNodeNS(newAttr);
 end;
 
 procedure TElement.RemoveAttributeNS(const namespaceURI, localName: string);
@@ -1672,8 +1672,8 @@ var
 begin
   currentAttr := GetAttribute(attr);
   currentAttrs := currentAttr.Split([' ']);
-
-  Result := MatchStr(value, currentAttrs);
+  try Result := MatchStr(value, currentAttrs);
+  finally currentAttrs := nil; end;
 end;
 
 {
@@ -1690,7 +1690,7 @@ function TElement.GetElementByTagName(const name: string; const deep: Integer): 
 begin
   with TSearchNodeList.Create(Self, '*', name, deep) do
   begin
-    Result := Items[0] as TElement;
+    Result := (GetFirst as TElement);
     Free;
   end;
 end;
@@ -1704,7 +1704,7 @@ function TElement.GetElementByTagNameNS(const namespaceURI, localName: string; c
 begin
   with TSearchNodeList.Create(Self, namespaceURI, localName, deep) do
   begin
-    Result := Items[0] as TElement;
+    Result := (GetFirst as TElement);
     Free;
   end;
 end;
@@ -1715,6 +1715,8 @@ function TElement.GetElementsByAttr(const attrs, values: array of string; const 
   var
     I, checkedCount, trueCount: Integer;
   begin
+    Result := False;
+    
     checkedCount := Length(attrs);
     trueCount := 0;
 
@@ -1734,14 +1736,17 @@ var
   currentElement: TElement;
   subElements: TNodeList;
 begin
+  // Result := nil;
+  // if NodeType <> ELEMENT_NODE then Exit;
+
   Result := TNodeList.Create(Self);
-  if NodeType <> ELEMENT_NODE then Exit;
   
   for I := 0 to FChildElements.Count - 1 do
   begin
     currentNode := FChildElements.Items[I];
-    // if currentNode.NodeType <> ELEMENT_NODE then Continue;
     currentElement := (currentNode as TElement);
+
+    if currentNode.NodeType <> ELEMENT_NODE then Continue;
 
     if checkAllAttr(currentElement, attrs, values) then
     begin
@@ -1757,14 +1762,12 @@ begin
 end;
 
 function TElement.GetElementByAttr(const attrs, values: array of string; const deeper: Boolean): TElement;
-var
-  nodeList: TNodeList;
 begin
-  nodeList := GetElementsByAttr(attrs, values, deeper);
-  try
-    Result := (nodeList.Items[0] as TElement);
-  except
-    FreeAndNil(nodeList);
+  with GetElementsByAttr(attrs, values, deeper) do
+  begin
+    Result := (GetFirst as TElement);
+
+    Free;
   end;
 end;
 
@@ -1863,7 +1866,7 @@ function TElement.GetElementsByXPath(const XPath: string): TNodeList;
   end;
 
 var
-  I, J: Integer;
+  I: Integer;
   isRoot: Boolean;
   keyList: TArray<string>;
   newXPath: string;
@@ -2039,7 +2042,7 @@ end;
 
 constructor TDocumentType.Create(ownerDocument: TDocument; const name, publicId, systemId: string);
 begin
-  inherited Create(OwnerDocument, '', name, false);
+  inherited Create(ownerDocument, '', name, false);
   FPublicID := publicId;
   FSystemID := systemId
 end;
@@ -2051,7 +2054,7 @@ end;
 
 function TDocumentType.CloneNode(deep: Boolean): TNode;
 begin
-  Result := TDocumentType.Create(OwnerDocument, Name, PublicId, SystemId)
+  Result := TDocumentType.Create(FOwnerDocument, Name, PublicId, SystemId)
 end;
 
 { =================
@@ -2087,9 +2090,8 @@ end;
 
 function TDocumentFragment.CloneNode(deep: Boolean): TNode;
 begin
-  Result := OwnerDocument.CreateDocumentFragment;
-  if deep then
-    Result.CloneChildNodesFrom(Self)
+  Result := FOwnerDocument.CreateDocumentFragment;
+  if deep then Result.CloneChildNodesFrom(Self)
 end;
 
 { =================
@@ -2098,10 +2100,10 @@ end;
 
 constructor TDocument.Create(doctype: TDocumentType);
 begin
-  inherited Create(Self, '', '', false);
+  inherited Create(Self, '', '', False);
+
   FDocType := doctype;
-  if Assigned(FDocType) then
-    FDocType.FOwnerDocument := Self;
+  if Assigned(FDocType) then FDocType.FOwnerDocument := Self;
   FNamespaceURIList := TNamespaceURIList.Create;
   FSearchNodeLists := TList.Create;
 end;
@@ -2111,13 +2113,13 @@ begin
   FDocType.Free;
   FNamespaceURIList.Free;
   FSearchNodeLists.Free;
-  inherited Destroy
+
+  inherited Destroy;
 end;
 
 procedure TDocument.SetDocType(value: TDocumentType);
 begin
-  if Assigned(FDocType) then
-    FDocType.Free;
+  if Assigned(FDocType) then FDocType.Free;
   FDocType := value
 end;
 
@@ -2154,36 +2156,34 @@ begin
   if Assigned(FDocType) then
   begin
     FDocType.Free;
-    FDocType := nil
+    FDocType := nil;
   end;
   
   FNamespaceURIList.Clear;
   FSearchNodeLists.Clear;
-  FChildNodes.Clear(false)
+  FChildNodes.Clear(False);
 end;
 
 procedure TDocument.AddSearchNodeList(NodeList: TNodeList);
 begin
-  if FSearchNodeLists.IndexOf(NodeList) < 0 then
-    FSearchNodeLists.Add(Nodelist)
+  if FSearchNodeLists.IndexOf(NodeList) < 0 then FSearchNodeLists.Add(NodeList);
 end;
 
 procedure TDocument.RemoveSearchNodeList(NodeList: TNodeList);
 begin
-  FSearchNodeLists.Remove(NodeList)
+  FSearchNodeLists.Remove(NodeList);
 end;
 
 procedure TDocument.InvalidateSearchNodeLists;
 var
   I: Integer;
 begin
-  for I := 0 to FSearchNodeLists.Count - 1 do
-    TSearchNodeList(FSearchNodeLists[I]).Invalidate
+  for I := 0 to FSearchNodeLists.Count - 1 do TSearchNodeList(FSearchNodeLists[I]).Invalidate;
 end;
 
 function TDocument.CreateDocType(const name, publicId, systemId: string): TDocumentType;
 begin
-  Result := TDocumentType.Create(Self, name, publicId, systemId)
+  Result := TDocumentType.Create(Self, name, publicId, systemId);
 end;
 
 function TDocument.CanInsert(Node: TNode): Boolean;
@@ -2194,17 +2194,17 @@ end;
 
 function TDocument.CloneNode(deep: Boolean): TNode;
 begin
-  Result := DOMImplementation.CreateDocument(NamespaceURI, DocumentElement.Name, Doctype.CloneNode(false) as TDocumentType)
+  Result := DOMImplementation.CreateDocument(NamespaceURI, DocumentElement.Name, Doctype.CloneNode(False) as TDocumentType);
 end;
 
 function TDocument.CreateElement(const tagName: string): TElement;
 begin
-  Result := TElement.Create(Self, '', tagName, false)
+  Result := TElement.Create(Self, '', tagName, False);
 end;
 
 function TDocument.CreateDocumentFragment: TDocumentFragment;
 begin
-  Result := TDocumentFragment.Create(Self)
+  Result := TDocumentFragment.Create(Self);
 end;
 
 function TDocument.CreateScript(const data: string): TScript;
@@ -2214,17 +2214,17 @@ end;
 
 function TDocument.CreateTextNode(const data: string): TTextNode;
 begin
-  Result := TTextNode.Create(Self, data)
+  Result := TTextNode.Create(Self, data);
 end;
 
 function TDocument.CreateComment(const data: string): TComment;
 begin
-  Result := TComment.Create(Self, data)
+  Result := TComment.Create(Self, data);
 end;
 
 function TDocument.CreateCDATASection(const data: string): TCDATASection;
 begin
-  Result := TCDATASection.Create(Self, data)
+  Result := TCDATASection.Create(Self, data);
 end;
 
 function TDocument.CreateProcessingInstruction(const target, data: string): TProcessingInstruction;
@@ -2239,7 +2239,7 @@ end;
 
 function TDocument.CreateEntityReference(const name: string): TEntityReference;
 begin
-  Result := TEntityReference.Create(Self, name)
+  Result := TEntityReference.Create(Self, name);
 end;
                                         
 function TDocument.ImportNode(importedNode: TNode; deep: Boolean): TNode;
@@ -2263,40 +2263,40 @@ end;
 
 constructor TProcessingInstruction.Create(ownerDocument: TDocument; const target, data: string);
 begin
-  inherited Create(OwnerDocument, '', '', False);
+  inherited Create(ownerDocument, '', '', False);
   
   FNodeName := target;
-  FNodeValue := data
+  FNodeValue := data;
 end;
 
 function TProcessingInstruction.GetTarget: string;
 begin
-  Result := FNodeName
+  Result := FNodeName;
 end;
 
 function TProcessingInstruction.GetData: string;
 begin
-  Result := FNodeValue
+  Result := FNodeValue;
 end;
 
 procedure TProcessingInstruction.SetData(const value: string);
 begin
-  FNodeValue := value
+  FNodeValue := value;
 end;
 
 function TProcessingInstruction.GetNodeType: Integer;
 begin
-  Result := PROCESSING_INSTRUCTION_NODE
+  Result := PROCESSING_INSTRUCTION_NODE;
 end;
 
 function TProcessingInstruction.ExportNode(otherDocument: TDocument; deep: Boolean): TNode;
 begin
-  Result := otherDocument.CreateProcessingInstruction(Target, Data)
+  Result := otherDocument.CreateProcessingInstruction(Target, Data);
 end;
 
 function TProcessingInstruction.CloneNode(deep: Boolean): TNode;
 begin
-  Result := OwnerDocument.CreateProcessingInstruction(Target, Data)
+  Result := FOwnerDocument.CreateProcessingInstruction(Target, Data);
 end;
 
 { =================
@@ -2310,23 +2310,22 @@ end;
 
 class function DOMImplementation.CreateDocumentType(const qualifiedName, publicId, systemId: string): TDocumentType;
 begin
-  Result := TDocumentType.Create(nil, qualifiedName, publicId, systemId)
+  Result := TDocumentType.Create(nil, qualifiedName, publicId, systemId);
 end;
 
 class function DomImplementation.CreateHtmlDocumentType(htmlDocType: Integer): TDocumentType;
 begin
   if htmlDocType in [DTD_HTML_STRICT..DTD_XHTML_FRAMESET] then
-    with DTDList[htmlDocType] do
-      Result := CreateDocumentType(HTML_TAG_NAME, publicId, systemId)
-  else
-    Result := nil
+  begin
+    with DTDList[htmlDocType] do Result := CreateDocumentType(HTML_TAG_NAME, publicId, systemId)
+  end
+  else Result := nil;
 end;
 
 class function DOMImplementation.CreateEmptyDocument(doctype: TDocumentType): TDocument;
 begin
-  if Assigned(doctype) and Assigned(doctype.OwnerDocument) then
-    raise DomException.Create(WRONG_DOCUMENT_ERR);
-  Result := TDocument.Create(doctype)
+  if Assigned(doctype) and Assigned(doctype.OwnerDocument) then raise DomException.Create(WRONG_DOCUMENT_ERR);
+  Result := TDocument.Create(doctype);
 end;
 
 class function DOMImplementation.CreateDocument(const namespaceURI, qualifiedName: string; doctype: TDocumentType): TDocument;
