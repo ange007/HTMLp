@@ -18,6 +18,7 @@ type
     function Find(const selector: string): IHTMLParser;
     function Map(callback: TProc<Integer, TElement>): IHTMLParser;
     {}
+    function IsValid: Boolean;
     function GetRootNode: TElement;
     function GetFirstNode: TElement;
     function GetLastNode: TElement;
@@ -44,6 +45,7 @@ type
     function SelectNode(const nodeIndex: Integer): IHTMLParser;
     function Map(callback: TProc<Integer, TElement>): IHTMLParser;
 
+    function IsValid: Boolean;
     function GetRootNode: TElement;
     function GetFirstNode: TElement;
     function GetLastNode: TElement;
@@ -85,6 +87,7 @@ end;
 destructor THTMLParserHelper.Destroy;
 begin
   Clear;
+  FCurrentElement := nil;
 
   FreeAndNil(FNodeList);
   FreeAndNil(FDocument);
@@ -95,11 +98,19 @@ end;
 function THTMLParserHelper.Find(const selector: string): IHTMLParser;
 begin
   Result := Self;
+  FCurrentNodeList := nil;
 
-  if Pos('/', selector) = 1 then FCurrentNodeList := FCurrentElement.GetElementsByXPath(selector)
-  else FCurrentNodeList := FCurrentElement.GetElementsByCSSSelector(selector);
+  try
+    if Pos('/', selector) = 1 then FCurrentNodeList := FCurrentElement.GetElementsByXPath(selector)
+    else FCurrentNodeList := FCurrentElement.GetElementsByCSSSelector(selector);
+  except end;
 
-  FNodeList.Add(FCurrentNodeList);
+  {if not (Assigned(FCurrentNodeList)) then
+  begin
+    FCurrentNodeList := FDocument.CreateElement('div');
+  end; }
+
+  if Assigned(FCurrentNodeList) then FNodeList.Add(FCurrentNodeList);
 end;
 
 function THTMLParserHelper.SelectNode(const nodeIndex: Integer): IHTMLParser;
@@ -118,6 +129,14 @@ begin
   if not (Assigned(FCurrentNodeList)) then Exit;
 
   for i := 0 to FCurrentNodeList.Count - 1 do callback(i, (FCurrentNodeList[i] as TElement));
+end;
+
+
+{}
+
+function THTMLParserHelper.IsValid: Boolean;
+begin
+  Result := Assigned(FCurrentElement);
 end;
 
 function THTMLParserHelper.GetRootNode: TElement;
@@ -159,6 +178,8 @@ function THTMLParserHelper.Clear: IHTMLParser;
 var
   i: Integer;
 begin
+  FCurrentNodeList := nil;
+
   for i := 0 to FNodeList.Count - 1 do FNodeList[i].Destroy;
   FNodeList.Clear;
 

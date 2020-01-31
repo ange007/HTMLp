@@ -11,9 +11,9 @@ type
   TDelimiters = set of Byte;
   TReaderState = (rsInitial, rsBeforeAttr, rsBeforeValue, rsInValue, rsInQuotedValue);
 
-  THtmlReader = class
+  THTMLReader = class
   private
-    FHtmlStr: string;
+    FHTMLStr: string;
     FPosition: Integer;
     FNodeType: Integer;
     FPrefix: string;
@@ -73,14 +73,14 @@ type
     procedure FireEvent(Event: TNotifyEvent);
     procedure ReadElementTail;
     procedure ReadTextNode;
-    procedure SetHtmlStr(const Value: string);
+    procedure SetHTMLStr(const Value: string);
     procedure SetNodeName(Value: string);
     procedure SkipWhiteSpaces;
   public
     constructor Create;
     function Read: Boolean;
 
-    property HTMLStr: string read FHtmlStr write SetHtmlStr;
+    property HTMLStr: string read FHTMLStr write SetHTMLStr;
     property isEmptyElement: Boolean read FIsEmptyElement;
     property LocalName: string read FLocalName;
     property Name: string read GetNodeName;
@@ -154,159 +154,152 @@ begin
   end
 end;
 
-constructor THtmlReader.Create;
+constructor THTMLReader.Create;
 begin
   inherited Create;
-  FHtmlStr := HTMLStr;
+
+  FHTMLStr := HTMLStr;
   FPosition := 1
 end;
 
-function THtmlReader.GetNodeName: string;
+function THTMLReader.GetNodeName: string;
 begin
-  if FPrefix <> '' then
-    Result := FPrefix + ':' + FLocalName
-  else
-    Result := FLocalName
+  if FPrefix <> '' then Result := FPrefix + ':' + FLocalName
+  else Result := FLocalName;
 end;
 
-function THtmlReader.GetToken(Delimiters: TDelimiters): string;
+function THTMLReader.GetToken(Delimiters: TDelimiters): string;
 var
   Start: Integer;
 begin
   Start := FPosition;
-  while (FPosition <= Length(FHtmlStr)) and not (Ord(FHtmlStr[FPosition]) in Delimiters) do
-    Inc(FPosition);
-  Result := Copy(FHtmlStr, Start, FPosition - Start)
+  while (FPosition <= Length(FHTMLStr)) and not (Ord(FHTMLStr[FPosition]) in Delimiters) do Inc(FPosition);
+  Result := Copy(FHTMLStr, Start, FPosition - Start);
 end;
 
-function THtmlReader.IsAttrTextChar: Boolean;
+function THTMLReader.IsAttrTextChar: Boolean;
 var
   WC: WideChar;
 begin
-  WC := FHtmlStr[FPosition];
-  if FState = rsInQuotedValue then
-    Result := (Ord(WC) <> FQuotation) and (Ord(WC) <> startEntity)
-  else
-    Result := not (Ord(WC) in notAttrText)
+  WC := FHTMLStr[FPosition];
+  if FState = rsInQuotedValue then Result := (Ord(WC) <> FQuotation) and (Ord(WC) <> startEntity)
+  else Result := not (Ord(WC) in notAttrText);
 end;
 
-function THtmlReader.IsDigit(HexBase: Boolean): Boolean;
+function THTMLReader.IsDigit(HexBase: Boolean): Boolean;
 var
   WC: WideChar;
 begin
-  WC := FHtmlStr[FPosition];
+  WC := FHTMLStr[FPosition];
   Result := Ord(WC) in decDigit;
-  if not Result and HexBase then
-    Result := Ord(WC) in hexDigit
+  if not Result and HexBase then Result := (Ord(WC) in hexDigit);
 end;
 
-function THtmlReader.IsEndEntityChar: Boolean;
+function THTMLReader.IsEndEntityChar: Boolean;
 var
   WC: WideChar;
 begin
-  WC := FHtmlStr[FPosition];
-  Result := Ord(WC) = endEntity
+  WC := FHTMLStr[FPosition];
+  Result := (Ord(WC) = endEntity);
 end;
 
-function THtmlReader.IsEntityChar: Boolean;
+function THTMLReader.IsEntityChar: Boolean;
 var
   WC: WideChar;
 begin
-  WC := FHtmlStr[FPosition];
-  Result := not (Ord(WC) in notEntity)
+  WC := FHTMLStr[FPosition];
+  Result := not (Ord(WC) in notEntity);
 end;
 
-function THtmlReader.IsEqualChar: Boolean;
+function THTMLReader.IsEqualChar: Boolean;
 var
   WC: WideChar;
 begin
-  WC := FHtmlStr[FPosition];
-  Result := Ord(WC) = equalChar
+  WC := FHTMLStr[FPosition];
+  Result := (Ord(WC) = equalChar);
 end;
 
-function THtmlReader.IsHexEntityChar: Boolean;
+function THTMLReader.IsHexEntityChar: Boolean;
 var
   WC: WideChar;
 begin
-  WC := FHtmlStr[FPosition];
-  Result := Ord(WC) in hexEntity
+  WC := FHTMLStr[FPosition];
+  Result := (Ord(WC) in hexEntity);
 end;
 
-function THtmlReader.IsNumericEntity: Boolean;
+function THTMLReader.IsNumericEntity: Boolean;
 var
   WC: WideChar;
 begin
-  WC := FHtmlStr[FPosition];
-  Result := Ord(WC) = numericEntity
+  WC := FHTMLStr[FPosition];
+  Result := (Ord(WC) = numericEntity);
 end;
 
-function THtmlReader.IsQuotation: Boolean;
+function THTMLReader.IsQuotation: Boolean;
 var
   WC: WideChar;
 begin
-  WC := FHtmlStr[FPosition];
-  if FQuotation = 0 then
-    Result := Ord(WC) in quotation
-  else
-    Result := Ord(WC) = FQuotation
+  WC := FHTMLStr[FPosition];
+  if FQuotation = 0 then Result := (Ord(WC) in quotation)
+  else Result := (Ord(WC) = FQuotation);
 end;
 
-function THtmlReader.IsSlashChar: Boolean;
+function THTMLReader.IsSlashChar: Boolean;
 var
   WC: WideChar;
 begin
-  WC := FHtmlStr[FPosition];
-  Result := Ord(WC) = slashChar
+  WC := FHTMLStr[FPosition];
+  Result := (Ord(WC) = slashChar);
 end;
 
-function THtmlReader.IsSpecialTagChar: Boolean;
+function THTMLReader.IsSpecialTagChar: Boolean;
 var
   WC: WideChar;
 begin
-  WC := FHtmlStr[FPosition];
-  Result := Ord(WC) = specialTagChar
+  WC := FHTMLStr[FPosition];
+  Result := (Ord(WC) = specialTagChar);
 end;
 
-function THtmlReader.IsStartCharacterData: Boolean;
+function THTMLReader.IsStartCharacterData: Boolean;
 begin    
-  Result := Match(CDataStartStr, false)
+  Result := Match(CDataStartStr, False);
 end;
 
-function THtmlReader.IsStartComment: Boolean;
+function THTMLReader.IsStartComment: Boolean;
 begin
-  Result := Match(CommentStartStr, false)
+  Result := Match(CommentStartStr, False);
 end;
 
-function THtmlReader.IsStartDocumentType: Boolean;
+function THTMLReader.IsStartDocumentType: Boolean;
 begin
-  Result := Match(DocTypeStartStr, true)
+  Result := Match(DocTypeStartStr, True);
 end;
 
-function THtmlReader.IsStartEntityChar: Boolean;
+function THTMLReader.IsStartEntityChar: Boolean;
 var
   WC: WideChar;
 begin
-  WC := FHtmlStr[FPosition];
-  Result := Ord(WC) = startEntity
+  WC := FHTMLStr[FPosition];
+  Result := (Ord(WC) = startEntity);
 end;
 
-function THtmlReader.IsStartMarkupChar: Boolean;
+function THTMLReader.IsStartMarkupChar: Boolean;
 var
   WC: WideChar;
 begin
-  WC := FHtmlStr[FPosition];
-  Result := Ord(WC) in startMarkup
+  WC := FHTMLStr[FPosition];
+  Result := (Ord(WC) in startMarkup);
 end;
 
-function THtmlReader.IsStartTagChar: Boolean;
+function THTMLReader.IsStartTagChar: Boolean;
 var
   WC: WideChar;
 begin
-  WC := FHtmlStr[FPosition];
-  Result := Ord(WC) = startTagChar
+  WC := FHTMLStr[FPosition];
+  Result := (Ord(WC) = startTagChar);
 end;
 
-function THtmlReader.Match(const Signature: string; IgnoreCase: Boolean): Boolean;
+function THTMLReader.Match(const Signature: string; IgnoreCase: Boolean): Boolean;
 var
   I, J: Integer;
   W1, W2: WideChar;
@@ -316,16 +309,17 @@ begin
   for I := 1 to Length(Signature) do
   begin
     J := FPosition + I - 1;
-    if (J < 1) or (J > Length(FHtmlStr)) then Exit;
+    if (J < 1) or (J > Length(FHTMLStr)) then Exit;
     W1 := Signature[I];
-    W2 := FHtmlStr[J];
-    if (W1 <> W2) and (not IgnoreCase or (UpperCase(W1) <> UpperCase(W2))) then Exit
+    W2 := FHTMLStr[J];
+    if (W1 <> W2)
+      and (not IgnoreCase or (UpperCase(W1) <> UpperCase(W2))) then Exit;
   end;
 
   Result := True;
 end;
 
-function THtmlReader.ReadAttrNode: Boolean;
+function THTMLReader.ReadAttrNode: Boolean;
 var
   AttrName: string;
 begin
@@ -343,24 +337,24 @@ begin
   Result := True;
 end;
 
-function THtmlReader.ReadAttrTextNode: Boolean;
+function THTMLReader.ReadAttrTextNode: Boolean;
 var
   Start: Integer;
 begin
   Result := False;
   Start := FPosition;
 
-  while (FPosition <= Length(FHtmlStr)) and (IsAttrTextChar) do Inc(FPosition);
+  while (FPosition <= Length(FHTMLStr)) and (IsAttrTextChar) do Inc(FPosition);
   if FPosition = Start then Exit;
 
   FNodeType := TEXT_NODE;
-  FNodeValue:= Copy(FHtmlStr, Start, FPosition - Start);
+  FNodeValue:= Copy(FHTMLStr, Start, FPosition - Start);
   FireEvent(FOnTextNode);
 
   Result := True;
 end;
 
-function THtmlReader.ReadCharacterData: Boolean;
+function THTMLReader.ReadCharacterData: Boolean;
 var
   StartPos: Integer;
 begin
@@ -370,12 +364,12 @@ begin
   if Result then
   begin
     FNodeType := CDATA_SECTION_NODE;
-    FNodeValue := Copy(FHtmlStr, StartPos, FPosition - StartPos - Length(CDataEndStr));
+    FNodeValue := Copy(FHTMLStr, StartPos, FPosition - StartPos - Length(CDataEndStr));
     FireEvent(FOnCDataSection)
   end
 end;
 
-function THtmlReader.ReadComment: Boolean;
+function THTMLReader.ReadComment: Boolean;
 var
   StartPos: Integer;
 begin
@@ -385,12 +379,12 @@ begin
   if Result then
   begin
     FNodeType := COMMENT_NODE;
-    FNodeValue := Copy(FHtmlStr, StartPos, FPosition - StartPos - Length(CommentEndStr));
-    FireEvent(FOnComment)
-  end
+    FNodeValue := Copy(FHTMLStr, StartPos, FPosition - StartPos - Length(CommentEndStr));
+    FireEvent(FOnComment);
+  end;
 end;
 
-function THtmlReader.ReadDocumentType: Boolean;
+function THTMLReader.ReadDocumentType: Boolean;
 var
   Name: string;
 begin
@@ -405,24 +399,24 @@ begin
   SkipWhiteSpaces;
   GetToken(tagNameDelimiter);
   SkipWhiteSpaces;
-  if ((FHtmlStr[FPosition] = '"') or (FHtmlStr[FPosition] = '''')) and not (ReadQuotedValue(FPublicID)) then Exit;
+  if ((FHTMLStr[FPosition] = '"') or (FHTMLStr[FPosition] = '''')) and not (ReadQuotedValue(FPublicID)) then Exit;
 
   SkipWhiteSpaces;
-  if FHtmlStr[FPosition] = '"' then
+  if FHTMLStr[FPosition] = '"' then
   begin
     if not ReadQuotedValue(FSystemID) then Exit
   end;
 
-  Result := SkipTo(DocTypeEndStr)
+  Result := SkipTo(DocTypeEndStr);
 end;
 
-function THtmlReader.ReadElementNode: Boolean;
+function THTMLReader.ReadElementNode: Boolean;
 var
   TagName: string;
 begin
   Result := False;
 
-  if FPosition < Length(FHtmlStr) then
+  if FPosition < Length(FHTMLStr) then
   begin
     TagName := LowerCase(GetToken(tagNameDelimiter));
     if TagName = '' then Exit;
@@ -433,16 +427,17 @@ begin
     FState := rsBeforeAttr;
     FireEvent(FOnElementStart);
     Result := True;
-  end
+  end;
 end;
 
-function THtmlReader.ReadEndElementNode: Boolean;
+function THTMLReader.ReadEndElementNode: Boolean;
 var
   TagName: string;
 begin
   Result := False;
+
   Inc(FPosition);
-  if FPosition > Length(FHtmlStr) then Exit;
+  if FPosition > Length(FHTMLStr) then Exit;
 
   TagName := LowerCase(GetToken(tagNameDelimiter));
   if TagName = '' then Exit;
@@ -454,22 +449,22 @@ begin
     SetNodeName(TagName);
     FireEvent(FOnEndElement);
     Result := True;
-  end
+  end;
 end;
 
-function THtmlReader.ReadEntityNode: Boolean;
+function THTMLReader.ReadEntityNode: Boolean;
 var
   CurrPos: Integer;
 begin
   Result := False;
   CurrPos := FPosition;
   Inc(FPosition);
-  if FPosition > Length(FHtmlStr) then Exit;
+  if FPosition > Length(FHTMLStr) then Exit;
 
   if IsNumericEntity then
   begin
     Inc(FPosition);
-    Result := ReadNumericEntityNode
+    Result := ReadNumericEntityNode;
   end
   else Result := ReadNamedEntityNode;
 
@@ -478,45 +473,45 @@ begin
     FNodeType := ENTITY_REFERENCE_NODE;
     // FireEvent(FOnEntityReference);  VVV - remove, entity node is added in ReadXXXEntityNode
   end
-  else FPosition := CurrPos
+  else FPosition := CurrPos;
 end;
 
-function THtmlReader.ReadNamedEntityNode: Boolean;
+function THTMLReader.ReadNamedEntityNode: Boolean;
 var
   Start: Integer;
 begin    
   Result := False;
-  if FPosition > Length(FHtmlStr) then Exit;
+  if FPosition > Length(FHTMLStr) then Exit;
 
   Start := FPosition;
-  while (FPosition <= Length(FHtmlStr)) and IsEntityChar do Inc(FPosition);
-  if (FPosition > Length(FHtmlStr)) or not IsEndEntityChar then Exit;
+  while (FPosition <= Length(FHTMLStr)) and IsEntityChar do Inc(FPosition);
+  if (FPosition > Length(FHTMLStr)) or not IsEndEntityChar then Exit;
 
   FNodeType := ENTITY_REFERENCE_NODE;
-  SetNodeName(Copy(FHtmlStr, Start, FPosition - Start));
+  SetNodeName(Copy(FHTMLStr, Start, FPosition - Start));
   Inc(FPosition);
 
   FireEvent(FOnEntityReference);
   Result := True;
 end;
 
-function THtmlReader.ReadNumericEntityNode: Boolean;
+function THTMLReader.ReadNumericEntityNode: Boolean;
 var
   Value: Word;
   HexBase: Boolean;
 begin
   Result := False;
-  if FPosition > Length(FHtmlStr) then Exit;
+  if FPosition > Length(FHTMLStr) then Exit;
 
   HexBase := IsHexEntityChar;
   if HexBase then Inc(FPosition);
 
   Value := 0;
-  while (FPosition <= Length(FHtmlStr)) and IsDigit(HexBase) do
+  while (FPosition <= Length(FHTMLStr)) and IsDigit(HexBase) do
   begin
     try
-      if HexBase then Value := Value * 16 + HexValue(FHtmlStr[FPosition])
-      else Value := Value * 10 + DecValue(FHtmlStr[FPosition])
+      if HexBase then Value := Value * 16 + HexValue(FHTMLStr[FPosition])
+      else Value := Value * 10 + DecValue(FHTMLStr[FPosition])
     except
       Exit
     end;
@@ -524,7 +519,7 @@ begin
     Inc(FPosition);
   end;
 
-  if (FPosition > Length(FHtmlStr)) or not IsEndEntityChar then Exit;
+  if (FPosition > Length(FHTMLStr)) or not IsEndEntityChar then Exit;
   Inc(FPosition);
   FNodeType := TEXT_NODE;
   FNodeValue := WideChar(Value);
@@ -532,31 +527,31 @@ begin
   Result := True;
 end;
 
-function THtmlReader.ReadQuotedValue(var Value: string): Boolean;
+function THTMLReader.ReadQuotedValue(var Value: string): Boolean;
 var
   QuotedChar: WideChar;
   Start: Integer;
 begin
-  QuotedChar := FHtmlStr[FPosition];
+  QuotedChar := FHTMLStr[FPosition];
   Inc(FPosition);
   Start := FPosition;
   Result := SkipTo(QuotedChar);
-  if Result then Value := Copy(FHtmlStr, Start, FPosition - Start);
+  if Result then Value := Copy(FHTMLStr, Start, FPosition - Start);
 end;
 
-function THtmlReader.ReadSpecialNode: Boolean;
+function THTMLReader.ReadSpecialNode: Boolean;
 begin
   Result := False;
 
   Inc(FPosition);
-  if FPosition > Length(FHtmlStr) then Exit;
+  if FPosition > Length(FHTMLStr) then Exit;
 
   if IsStartDocumentType then Result := ReadDocumentType
   else if IsStartCharacterData then Result := ReadCharacterData
   else if IsStartComment then Result := ReadComment;
 end;
 
-function THtmlReader.ReadTagNode: Boolean;
+function THTMLReader.ReadTagNode: Boolean;
 var
   CurrPos: Integer;
 begin
@@ -564,7 +559,7 @@ begin
 
   CurrPos := FPosition;
   Inc(FPosition);
-  if FPosition > Length(FHtmlStr) then Exit;
+  if FPosition > Length(FHTMLStr) then Exit;
 
   if IsSlashChar then Result := ReadEndElementNode
   else if IsSpecialTagChar then Result := ReadSpecialNode
@@ -573,29 +568,28 @@ begin
   if not Result then FPosition := CurrPos;
 end;
 
-function THtmlReader.SkipTo(const Signature: string): Boolean;
+function THTMLReader.SkipTo(const Signature: string): Boolean;
 begin
-  while FPosition <= Length(FHtmlStr) do
+  while FPosition <= Length(FHTMLStr) do
   begin
     if Match(Signature, False) then
     begin
       Inc(FPosition, Length(Signature));
-      Result := True;
-      Exit
+      Exit(True);
     end;
 
-    Inc(FPosition)
+    Inc(FPosition);
   end;
 
   Result := False;
 end;
 
-procedure THtmlReader.FireEvent(Event: TNotifyEvent);
+procedure THTMLReader.FireEvent(Event: TNotifyEvent);
 begin
   if Assigned(Event) then Event(Self);
 end;
 
-function THtmlReader.Read: Boolean;
+function THTMLReader.Read: Boolean;
 begin
   FNodeType := NONE;
   FPrefix := '';
@@ -606,26 +600,29 @@ begin
   FIsEmptyElement := False;
   Result := False;
 
-  if FPosition > Length(FHtmlStr) then Exit;
+  if FPosition > Length(FHTMLStr) then Exit;
   Result := True;
 
   if FState in [rsBeforeValue, rsInValue, rsInQuotedValue] then
   begin
     if ReadValueNode then Exit;
+
     if FState = rsInQuotedValue then Inc(FPosition);
     FNodeType := ATTRIBUTE_NODE;
     FireEvent(FOnAttributeEnd);
-    FState := rsBeforeAttr
+    FState := rsBeforeAttr;
   end
   else if FState = rsBeforeAttr then
   begin
     if ReadAttrNode then Exit;
+
     ReadElementTail;
     FState := rsInitial;
   end
   else if IsStartTagChar then
   begin
     if ReadTagNode then Exit;
+
     Inc(FPosition);
     FNodeType := ENTITY_REFERENCE_NODE;
     SetNodeName('lt');
@@ -634,50 +631,51 @@ begin
   else if IsStartEntityChar then
   begin
     if ReadEntityNode then Exit;
+
     Inc(FPosition);
     FNodeType := ENTITY_REFERENCE_NODE;
     SetNodeName('amp');
-    FireEvent(FOnEntityReference)
+    FireEvent(FOnEntityReference);
   end
   else ReadTextNode;
 end;
 
-procedure THtmlReader.ReadTextNode;
+procedure THTMLReader.ReadTextNode;
 var
   Start: Integer;
 begin
   Start := FPosition;
-  repeat
-    Inc(FPosition)
-  until (FPosition > Length(FHtmlStr)) or IsStartMarkupChar;
+  repeat Inc(FPosition)
+  until (FPosition > Length(FHTMLStr)) or IsStartMarkupChar;
   FNodeType := TEXT_NODE;
-  FNodeValue:= Copy(FHtmlStr, Start, FPosition - Start);
-  FireEvent(FOnTextNode)
+  FNodeValue:= Copy(FHTMLStr, Start, FPosition - Start);
+
+  FireEvent(FOnTextNode);
 end;
 
-function THtmlReader.ReadValueNode: Boolean;
+function THTMLReader.ReadValueNode: Boolean;
 begin
   Result := False;
   if FState = rsBeforeValue then
   begin
     SkipWhiteSpaces;
-    if FPosition > Length(FHtmlStr) then Exit;
+    if FPosition > Length(FHTMLStr) then Exit;
     if not IsEqualChar then Exit;
 
     Inc(FPosition);
     SkipWhiteSpaces;
-    if FPosition > Length(FHtmlStr) then Exit;
+    if FPosition > Length(FHTMLStr) then Exit;
 
     if IsQuotation then
     begin
-      FQuotation := Ord(FHtmlStr[FPosition]);
+      FQuotation := Ord(FHTMLStr[FPosition]);
       Inc(FPosition);
-      FState := rsInQuotedValue
+      FState := rsInQuotedValue;
     end
-    else FState := rsInValue
+    else FState := rsInValue;
   end;
 
-  if FPosition > Length(FHtmlStr) then Exit;
+  if FPosition > Length(FHTMLStr) then Exit;
 
   if IsStartEntityChar then
   begin
@@ -688,15 +686,16 @@ begin
     FNodeType := ENTITY_REFERENCE_NODE;
 
     SetNodeName('amp');
-    FireEvent(FOnEntityReference)
+    FireEvent(FOnEntityReference);
   end
-  else Result := ReadAttrTextNode
+  else Result := ReadAttrTextNode;
 end;
 
-procedure THtmlReader.ReadElementTail;
+procedure THTMLReader.ReadElementTail;
 begin
   SkipWhiteSpaces;
-  if (FPosition <= Length(FHtmlStr)) and (IsSlashChar) then
+
+  if (FPosition <= Length(FHTMLStr)) and (IsSlashChar) then
   begin
     FIsEmptyElement := True;
     Inc(FPosition)
@@ -704,16 +703,16 @@ begin
 
   SkipTo(WideChar(endTagChar));
   FNodeType := ELEMENT_NODE;
-  FireEvent(FOnElementEnd)
+  FireEvent(FOnElementEnd);
 end;
                                  
-procedure THtmlReader.SetHtmlStr(const Value: string);
+procedure THTMLReader.SetHTMLStr(const Value: string);
 begin
-  FHtmlStr := Value;
+  FHTMLStr := Value;
   FPosition := 1;
 end;
 
-procedure THtmlReader.SetNodeName(Value: string);
+procedure THTMLReader.SetNodeName(Value: string);
 var
   I: Integer;
 begin
@@ -731,10 +730,10 @@ begin
   end
 end;
 
-procedure THtmlReader.SkipWhiteSpaces;
+procedure THTMLReader.SkipWhiteSpaces;
 begin
-  while (FPosition <= Length(FHtmlStr))
-    and (Ord(FHtmlStr[FPosition]) in whiteSpace) do Inc(FPosition);
+  while (FPosition <= Length(FHTMLStr))
+    and (Ord(FHTMLStr[FPosition]) in whiteSpace) do Inc(FPosition);
 end;
 
 end.
