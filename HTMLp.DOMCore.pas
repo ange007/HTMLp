@@ -26,6 +26,7 @@ const
   DOCUMENT_TYPE_NODE             = 10;
   DOCUMENT_FRAGMENT_NODE         = 11;
   NOTATION_NODE                  = 12;
+  SCRIPT_NODE                    = 13;
 
   END_ELEMENT_NODE               = 255; // extension
 
@@ -205,6 +206,15 @@ type
   end;
 
   TComment = class(TCharacterData)
+  protected
+    function GetNodeName: string; override;
+    function GetNodeType: Integer; override;
+    function ExportNode(otherDocument: TDocument; deep: Boolean): TNode; override;
+  public
+    function CloneNode(deep: Boolean): TNode; override;
+  end;
+
+  TScript = class(TCharacterData)
   protected
     function GetNodeName: string; override;
     function GetNodeType: Integer; override;
@@ -415,6 +425,7 @@ type
     function ImportNode(importedNode: TNode; deep: Boolean): TNode;
     function CreateElementNS(const namespaceURI, qualifiedName: string): TElement;
     function CreateAttributeNS(const namespaceURI, qualifiedName: string): TAttr;
+    function CreateScript(const data: string): TScript;
 
     property Doctype: TDocumentType read FDocType write SetDocType;
     property NamespaceURIList: TNamespaceURIList read FNamespaceURIList;
@@ -2177,7 +2188,7 @@ end;
 
 function TDocument.CanInsert(Node: TNode): Boolean;
 begin
-  Result := (node.NodeType in [TEXT_NODE, COMMENT_NODE, PROCESSING_INSTRUCTION_NODE]) or
+  Result := (node.NodeType in [TEXT_NODE, COMMENT_NODE, PROCESSING_INSTRUCTION_NODE, SCRIPT_NODE]) or
             (node.NodeType = ELEMENT_NODE) and (DocumentElement = nil)
 end;
 
@@ -2194,6 +2205,11 @@ end;
 function TDocument.CreateDocumentFragment: TDocumentFragment;
 begin
   Result := TDocumentFragment.Create(Self)
+end;
+
+function TDocument.CreateScript(const data: string): TScript;
+begin
+  Result := TScript.Create(Self, data)
 end;
 
 function TDocument.CreateTextNode(const data: string): TTextNode;
@@ -2317,6 +2333,28 @@ class function DOMImplementation.CreateDocument(const namespaceURI, qualifiedNam
 begin
   Result := CreateEmptyDocument(doctype);
   Result.AppendChild(Result.CreateElementNS(namespaceURI, qualifiedName));
+end;
+
+{ TScript }
+
+function TScript.CloneNode(deep: Boolean): TNode;
+begin
+  Result := OwnerDocument.CreateScript(Data)
+end;
+
+function TScript.ExportNode(otherDocument: TDocument; deep: Boolean): TNode;
+begin
+  Result := otherDocument.CreateScript(Data)
+end;
+
+function TScript.GetNodeName: string;
+begin
+  Result := '#script';
+end;
+
+function TScript.GetNodeType: Integer;
+begin
+  Result := SCRIPT_NODE;
 end;
 
 end.
