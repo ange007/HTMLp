@@ -5,8 +5,8 @@ interface
 const
   MaxEntNameLen = 8;
   
-function GetEntValue(const Name: String): WideChar;
-function GetEntName(Code: Word): String;
+function GetEntValue(const Name: string): WideChar;
+function GetEntName(Code: Word): string;
 
 implementation
 
@@ -284,10 +284,10 @@ const
 type
   TEntList = class(TList)
   private
-    function GetCode(const Name: String): Integer;
+    function GetCode(const Name: string): Integer;
   public
     constructor Create;
-    property Code[const Name: String]: Integer read GetCode;
+    property Code[const Name: string]: Integer read GetCode;
   end;
 
 var
@@ -295,7 +295,7 @@ var
 
 function EntCompare(Ent1, Ent2: Pointer): Integer;
 begin
-  Result := CompareStr(PEntity(Ent1)^.Name, PEntity(Ent2)^.Name);
+  Result := AnsiCompareStr(PEntity(Ent1)^.Name, PEntity(Ent2)^.Name);
 end;
 
 constructor TEntList.Create;
@@ -309,7 +309,7 @@ begin
   Sort(EntCompare);
 end;
 
-function TEntList.GetCode(const Name: String): Integer;
+function TEntList.GetCode(const Name: string): Integer;
 var
   I, L, U, Cmp: Integer;
 begin
@@ -318,7 +318,8 @@ begin
   while L <= U do
   begin
     I := (L + U) div 2;
-    Cmp := CompareStr(Name, PEntity(Items[I])^.Name);
+
+    Cmp := AnsiCompareStr(Name, PEntity(Items[I])^.Name);
     if Cmp = 0 then
     begin
       Result := PEntity(Items[I])^.Code;
@@ -332,12 +333,12 @@ begin
   Result := 32;
 end;
 
-function GetEntValue(const Name: String): WideChar;
+function GetEntValue(const Name: string): WideChar;
 begin
-  Result := WideChar(EntityList.Code[Name])
+  Result := WideChar(EntityList.Code[Name]);
 end;
 
-function GetEntName(Code: Word): String;
+function GetEntName(Code: Word): string;
 var
   I: Integer;
 begin
@@ -356,5 +357,5 @@ end;
 initialization
   EntityList := TEntList.Create;
 finalization
-  EntityList.Free
+  EntityList.Free;
 end.

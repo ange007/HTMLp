@@ -74,7 +74,7 @@ begin
   {}
   with THTMLParser.Create do
   begin
-    FDocument := parseString(HTML);
+    try FDocument := parseString(HTML); except end;
     FCurrentElement := GetRootNode;
 
     Free;

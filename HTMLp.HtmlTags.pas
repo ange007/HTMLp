@@ -45,7 +45,7 @@ type
     constructor Create;
     destructor Destroy; override;
 
-    function GetTagByName(const Name: WideString): THTMLTag;
+    function GetTagByName(const Name: string): THTMLTag;
     function GetTagByNumber(Number: Integer): THTMLTag;
   end;
 
@@ -274,7 +274,7 @@ begin
   FList.Add(THTMLTag.Create('h5',         H5_TAG,         [], []));
   FList.Add(THTMLTag.Create('h6',         H6_TAG,         [], []));
   FList.Add(THTMLTag.Create('head',       HEAD_TAG,       [], []));
-  FList.Add(THTMLTag.Create('header',     HEADER_TAG,       [], []));
+  FList.Add(THTMLTag.Create('header',     HEADER_TAG,     [], []));
   FList.Add(THTMLTag.Create('hr',         HR_TAG,         [], []));
   FList.Add(THTMLTag.Create('html',       HTML_TAG,       [], []));
   FList.Add(THTMLTag.Create('i',          I_TAG,          [], []));
@@ -337,7 +337,7 @@ begin
   FList.Add(THTMLTag.Create('wbr',        WBR_TAG,        [], []));
   FList.Add(THTMLTag.Create('xmp',        XMP_TAG,        [], []));
 
-  FUnknownTag := THTMLTag.Create('', UNKNOWN_TAG, [], [])
+  FUnknownTag := THTMLTag.Create('', UNKNOWN_TAG, [], []);
 end;
 
 destructor THTMLTagList.Destroy;
@@ -348,7 +348,7 @@ begin
   FList.Free;
   FUnknownTag.Free;
 
-  inherited Destroy
+  inherited Destroy;
 end;
 
 function THTMLTagList.GetTag(Compare: TCompareTag): THTMLTag;
@@ -357,27 +357,30 @@ var
 begin
   Low := -1;
   High := FList.Count - 1;
+
   while High - Low > 1 do
   begin
     I := (High + Low) div 2;
     Result := FList[I];
+
     Rel := Compare(Result);
     if Rel < 0 then High := I
     else if Rel > 0 then Low := I
-    else Exit
+    else Exit;
   end;
+
   if High >= 0 then
   begin
     Result := FList[High];
-    if Compare(Result) = 0 then Exit
+    if Compare(Result) = 0 then Exit;
   end;
 
-  Result := nil
+  Result := nil;
 end;
 
 function THTMLTagList.CompareName(Tag: THTMLTag): Integer;
 begin
-  Result := CompareStr(FSearchName, Tag.Name)
+  Result := AnsiCompareStr(FSearchName, Tag.Name)
 end;
 
 function THTMLTagList.CompareNumber(Tag: THTMLTag): Integer;
@@ -385,7 +388,7 @@ begin
   Result := (FSearchNumber - Tag.Number);
 end;
 
-function THTMLTagList.GetTagByName(const Name: WideString): THTMLTag;
+function THTMLTagList.GetTagByName(const Name: string): THTMLTag;
 begin
   FSearchName := Name;
   Result := GetTag(CompareName);
@@ -398,18 +401,18 @@ begin
   Result := GetTag(CompareNumber);
 end;
 
-function TURLSchemes.Add(const S: String): Integer;
+function TURLSchemes.Add(const S: string): Integer;
 begin
   if Length(S) > FMaxLen then FMaxLen := Length(S);
   Result := inherited Add(S);
 end;
 
-function TURLSchemes.IsURL(const S: String): Boolean;
+function TURLSchemes.IsURL(const S: string): Boolean;
 begin
-  Result := IndexOf(LowerCase(S)) >= 0
+  Result := IndexOf(LowerCase(S)) >= 0;
 end;
 
-function TURLSchemes.GetScheme(const S: String): String;
+function TURLSchemes.GetScheme(const S: string): string;
 const
   SchemeChars = [Ord('A')..Ord('Z'), Ord('a')..Ord('z')];
 var
@@ -418,12 +421,11 @@ begin
   Result := '';
   for I := 1 to MaxLen + 1 do
   begin
-    if I > Length(S) then
-      Exit;
+    if I > Length(S) then Exit;
+
     if S[I] = ':' then
     begin
-      if IsURL(Copy(S, 1, I - 1)) then
-        Result := Copy(S, 1, I - 1);
+      if IsURL(Copy(S, 1, I - 1)) then Result := Copy(S, 1, I - 1);
       Exit
     end
   end

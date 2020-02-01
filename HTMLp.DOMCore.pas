@@ -436,7 +436,7 @@ type
   public
     class function HasFeature(const feature, version: string): Boolean;
     class function CreateDocumentType(const qualifiedName, publicId, systemId: string): TDocumentType;
-    class function CreateHtmlDocumentType(htmlDocType: Integer): TDocumentType; // extension
+    class function CreateHTMLDocumentType(htmlDocType: Integer): TDocumentType; // extension
     class function CreateEmptyDocument(doctype: TDocumentType): TDocument; // extension
     class function CreateDocument(const namespaceURI, qualifiedName: string; doctype: TDocumentType): TDocument;
   end;
@@ -741,8 +741,13 @@ function TNode.InsertSingleNode(newChild, refChild: TNode): TNode;
 var
   I: Integer;
 begin
+  Result := nil;
+
   if not (CanInsert(newChild))
-    or newChild.AncestorOf(Self) then raise DomException.Create(HIERARCHY_REQUEST_ERR);
+    or newChild.AncestorOf(Self) then
+  begin
+    raise DomException.Create(HIERARCHY_REQUEST_ERR);
+  end;
 
   if newChild <> refChild then
   begin
@@ -772,7 +777,7 @@ begin
   end
   else Result := InsertSingleNode(newChild, refChild);
 
-  if Assigned(FOwnerDocument) then FOwnerDocument.InvalidateSearchNodeLists
+  if Assigned(FOwnerDocument) then FOwnerDocument.InvalidateSearchNodeLists;
 end;
 
 function TNode.ReplaceChild(newChild, oldChild: TNode): TNode;
@@ -834,7 +839,7 @@ begin
       Exit
     end;
     
-    node := node.ParentNode
+    node := node.ParentNode;
   end;
   
   Result := False;
@@ -2313,7 +2318,7 @@ begin
   Result := TDocumentType.Create(nil, qualifiedName, publicId, systemId);
 end;
 
-class function DomImplementation.CreateHtmlDocumentType(htmlDocType: Integer): TDocumentType;
+class function DomImplementation.CreateHTMLDocumentType(htmlDocType: Integer): TDocumentType;
 begin
   if htmlDocType in [DTD_HTML_STRICT..DTD_XHTML_FRAMESET] then
   begin

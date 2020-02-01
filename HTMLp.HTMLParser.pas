@@ -8,8 +8,8 @@ uses
 type
   THTMLParser = class
   private
-    FHtmlDocument: TDocument;
-    FHtmlReader: THTMLReader;
+    FHTMLDocument: TDocument;
+    FHTMLReader: THTMLReader;
     FCurrentNode: TNode;
     FCurrentTag: THTMLTag;
     function FindDefParent: TElement;
@@ -34,7 +34,7 @@ type
     destructor Destroy; override;
 
     function ParseString(const htmlStr: WideString): TDocument;
-    property HTMLDocument: TDocument read FHtmlDocument;
+    property HTMLDocument: TDocument read FHTMLDocument;
   end;
 
 implementation
@@ -48,8 +48,8 @@ constructor THTMLParser.Create;
 begin
   inherited Create;
 
-  FHtmlReader := THTMLReader.Create;
-  with FHtmlReader do
+  FHTMLReader := THTMLReader.Create;
+  with FHTMLReader do
   begin
     OnAttributeEnd := ProcessAttributeEnd;
     OnAttributeStart := ProcessAttributeStart;
@@ -69,14 +69,14 @@ end;
 
 destructor THTMLParser.Destroy;
 begin
-  FHtmlReader.Free;
+  FHTMLReader.Free;
 
   inherited Destroy;
 end;
 
 function THTMLParser.FindDefParent: TElement;
 begin
-  if FCurrentTag.Number in [HEAD_TAG, BODY_TAG] then Result := FHtmlDocument.AppendChild(FHtmlDocument.CreateElement(htmlTagName)) as TElement
+  if FCurrentTag.Number in [HEAD_TAG, BODY_TAG] then Result := FHTMLDocument.AppendChild(FHTMLDocument.CreateElement(htmlTagName)) as TElement
   else if FCurrentTag.Number in HeadTags then Result := GetMainElement(headTagName)
   else Result := GetMainElement(bodyTagName);
 end;
@@ -92,7 +92,7 @@ begin
   else if FCurrentTag.Number in [COLGROUP_TAG, THEAD_TAG, TFOOT_TAG, TBODY_TAG] then Result := FindParentElement(TableSectionParentTags)
   else if FCurrentTag.Number in [TABLE_TAG] then Result := FindTableParent
   else if FCurrentTag.Number in [OPTION_TAG] then Result := FindParentElement(OptionParentTags)
-  else if FCurrentTag.Number in [HEAD_TAG, BODY_TAG] then Result := FHtmlDocument.DocumentElement as TElement
+  else if FCurrentTag.Number in [HEAD_TAG, BODY_TAG] then Result := FHTMLDocument.DocumentElement as TElement
   else Result := nil;
 
   if Result = nil then Result := FindDefParent;
@@ -153,7 +153,7 @@ begin
   while Node.NodeType = ELEMENT_NODE do
   begin
     Result := (Node as TElement);
-    if Result.TagName = FHtmlReader.Name then Exit;
+    if Result.TagName = FHTMLReader.Name then Exit;
 
     Node := Node.ParentNode;
   end;
@@ -166,11 +166,11 @@ var
   child: TNode;
   I: Integer;
 begin
-  if (FHtmlDocument.DocumentElement = nil) then FHtmlDocument.AppendChild(FHtmlDocument.CreateElement(htmlTagName));
+  if (FHTMLDocument.DocumentElement = nil) then FHTMLDocument.AppendChild(FHTMLDocument.CreateElement(htmlTagName));
 
-  for I := 0 to FHtmlDocument.DocumentElement.ChildNodes.Count - 1 do
+  for I := 0 to FHTMLDocument.DocumentElement.ChildNodes.Count - 1 do
   begin
-    child := FHtmlDocument.DocumentElement.ChildNodes.Items[I];
+    child := FHTMLDocument.DocumentElement.ChildNodes.Items[I];
 
     if (child.NodeType = ELEMENT_NODE) and (child.Name = tagName) then
     begin
@@ -180,8 +180,8 @@ begin
     end
   end;
 
-  Result := FHtmlDocument.CreateElement(tagName);
-  FHtmlDocument.DocumentElement.AppendChild(Result);
+  Result := FHTMLDocument.CreateElement(tagName);
+  FHTMLDocument.DocumentElement.AppendChild(Result);
 end;
 
 procedure THTMLParser.ProcessAttributeEnd(Sender: TObject);
@@ -191,10 +191,18 @@ end;
 
 procedure THTMLParser.ProcessAttributeStart(Sender: TObject);
 var
+  newAttrName: string;
   Attr: TAttr;
 begin
-  Attr := FHtmlDocument.CreateAttribute((Sender as THTMLReader).Name);
-  (FCurrentNode as TElement).SetAttributeNode(Attr);
+  newAttrName := (Sender as THTMLReader).Name;
+  Attr := (FCurrentNode as TElement).GetAttributeNode(newAttrName);
+
+  if not (Assigned(Attr)) then
+  begin
+    Attr := FHTMLDocument.CreateAttribute(newAttrName);
+    (FCurrentNode as TElement).SetAttributeNode(Attr);
+  end;
+
   FCurrentNode := Attr;
 end;
 
@@ -202,7 +210,7 @@ procedure THTMLParser.ProcessCDataSection(Sender: TObject);
 var
   CDataSection: TCDataSection;
 begin
-  CDataSection := FHtmlDocument.CreateCDATASection(FHtmlReader.NodeValue);
+  CDataSection := FHTMLDocument.CreateCDATASection(FHTMLReader.NodeValue);
   FCurrentNode.AppendChild(CDataSection)
 end;
 
@@ -210,18 +218,18 @@ procedure THTMLParser.ProcessComment(Sender: TObject);
 var
   Comment: TComment;
 begin
-  Comment := FHtmlDocument.CreateComment(FHtmlReader.NodeValue);
+  Comment := FHTMLDocument.CreateComment(FHTMLReader.NodeValue);
   FCurrentNode.AppendChild(Comment);
 end;
 
 procedure THTMLParser.ProcessDocType(Sender: TObject);
 begin
-  with FHtmlReader do FHtmlDocument.Doctype := DomImplementation.CreateDocumentType(Name, PublicID, SystemID);
+  with FHTMLReader do FHTMLDocument.Doctype := DomImplementation.CreateDocumentType(Name, PublicID, SystemID);
 end;
 
 procedure THTMLParser.ProcessElementEnd(Sender: TObject);
 begin
-  if FHtmlReader.isEmptyElement
+  if FHTMLReader.isEmptyElement
     or (FCurrentTag.Number in EmptyTags) then FCurrentNode := FCurrentNode.ParentNode;
 
   FCurrentTag := nil;
@@ -232,7 +240,7 @@ var
   Element: TElement;
   Parent: TNode;
 begin
-  FCurrentTag := HTMLTagList.GetTagByName(FHtmlReader.Name);
+  FCurrentTag := HTMLTagList.GetTagByName(FHTMLReader.Name);
   if FCurrentTag.Number in (NeedFindParentTags + BlockTags) then
   begin
     Parent := FindParent;
@@ -240,7 +248,7 @@ begin
     FCurrentNode := Parent;
   end;
 
-  Element := FHtmlDocument.CreateElement(FHtmlReader.Name);
+  Element := FHTMLDocument.CreateElement(FHTMLReader.Name);
   FCurrentNode.AppendChild(Element);
   FCurrentNode := Element;
 end;
@@ -258,7 +266,7 @@ procedure THTMLParser.ProcessEntityReference(Sender: TObject);
 var
   EntityReference: TEntityReference;
 begin
-  EntityReference := FHtmlDocument.CreateEntityReference(FHtmlReader.Name);
+  EntityReference := FHTMLDocument.CreateEntityReference(FHTMLReader.Name);
   FCurrentNode.AppendChild(EntityReference);
 end;
 
@@ -266,7 +274,7 @@ procedure THtmlParser.ProcessScript(Sender: TObject);
 var
   Script: TScript;
 begin
-  Script := FHtmlDocument.CreateScript(FHtmlReader.NodeValue);
+  Script := FHTMLDocument.CreateScript(FHTMLReader.NodeValue);
   FCurrentNode.AppendChild(Script);
 end;
 
@@ -274,22 +282,22 @@ procedure THtmlParser.ProcessTextNode(Sender: TObject);
 var
   TextNode: TTextNode;
 begin
-  TextNode := FHtmlDocument.CreateTextNode(FHtmlReader.NodeValue);
+  TextNode := FHTMLDocument.CreateTextNode(FHTMLReader.NodeValue);
   FCurrentNode.AppendChild(TextNode);
 end;
 
 function THTMLParser.ParseString(const htmlStr: WideString): TDocument;
 begin
-  FHtmlReader.HTMLStr := htmlStr;
-  FHtmlDocument := DomImplementation.CreateEmptyDocument(nil);
-  FCurrentNode := FHtmlDocument;
+  FHTMLReader.HTMLStr := htmlStr;
+  FHTMLDocument := DomImplementation.CreateEmptyDocument(nil);
+  FCurrentNode := FHTMLDocument;
   try
-    while FHtmlReader.Read do;
+    while FHTMLReader.Read do;
   except
     // TODO: Add event ?
   end;
 
-  Result := FHtmlDocument;
+  Result := FHTMLDocument;
 end;
 
 end.

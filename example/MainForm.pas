@@ -4,28 +4,32 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, ExtCtrls, IdHTTP,
+  StdCtrls, ExtCtrls, IdHTTP, StrUtils,
 
-  HTMLp.HtmlParser, HTMLp.Helper, Buttons;
+  HTMLp.HTMLParser, HTMLp.Helper, Buttons;
 
 type
   THTMLForm = class(TForm)
     TopPanel: TPanel;
     FileNameEdit: TEdit;
     BrowseButton: TButton;
-    OpenButton: TButton;
+    ToTextButton: TButton;
     Memo: TMemo;
     OpenDialog: TOpenDialog;
     PanelXPath: TPanel;
     UseXPathButton: TSpeedButton;
     XPathEdit: TEdit;
+    MultiThreadTest: TButton;
     procedure BrowseButtonClick(Sender: TObject);
-    procedure OpenButtonClick(Sender: TObject);
+    procedure ToTextButtonClick(Sender: TObject);
     procedure UseXPathButtonClick(Sender: TObject);
+    procedure MultiThreadTestClick(Sender: TObject);
+  public
   private
-    HtmlParser: THTMLParser;
-    function GetHTML(const fileName: string): string;
+    HTMLParser: THTMLParser;
   end;
+
+  function GetHTML(const fileName: string): string;
 
 var
   HTMLForm: THTMLForm;
@@ -37,14 +41,8 @@ implementation
 uses
   HTMLp.DomCore, HTMLp.Formatter;
 
-procedure THTMLForm.BrowseButtonClick(Sender: TObject);
-begin
-  if OpenDialog.Execute then FileNameEdit.Text := OpenDialog.FileName
-end;
-
-function THTMLForm.GetHTML(const fileName: string): string;
+function GetHTML(const fileName: string): string;
 var
-  S: String;
   F: TStringStream;
 begin
   if Pos('http', fileName) = 1 then
@@ -63,9 +61,9 @@ begin
   end
   else
   begin
-    F := TStringStream.Create{('', TEncoding.UTF8)};
+    F := TStringStream.Create({'', TEncoding.UTF8});
     try
-      F.LoadFromFile(FileNameEdit.Text);
+      F.LoadFromFile(fileName);
       Result := F.DataString;
     finally
       F.Free
@@ -73,14 +71,52 @@ begin
   end;
 end;
 
-procedure THTMLForm.UseXPathButtonClick(Sender: TObject);
+procedure THTMLForm.MultiThreadTestClick(Sender: TObject);
 var
-  S: string;
+  i: Integer;
+  thread: TThread;
 begin
-  S := GetHTML(FileNameEdit.Text);
   Memo.Clear;
 
-  ParseHTML(s).Find(XPathEdit.Text).Map( procedure(AIndex: Integer; AEl: TElement)
+  for i := 0 to 50 do
+  begin
+    thread := TThread.CreateAnonymousThread(procedure( )
+    var
+      HTML, body: string;
+      HTMLDoc: TDocument;
+    begin
+      with THTMLParser.Create do
+      begin
+        HTML := GetHTML(FileNameEdit.Text);
+        HTMLDoc := parseString(HTML);
+        body := HTMLDoc.GetInnerHTML;
+
+        FreeAndNil(HTMLDoc);
+        Free;
+      end;
+
+      TThread.Synchronize(TThread.Current, procedure begin HTMLForm.Memo.Lines.Add(IfThen(body <> '', 'GOOD', 'BAD')); end);
+      Sleep(3000);
+    end);
+
+    {}
+    thread.Start;
+  end;
+end;
+
+procedure THTMLForm.BrowseButtonClick(Sender: TObject);
+begin
+  if OpenDialog.Execute then FileNameEdit.Text := OpenDialog.FileName
+end;
+
+procedure THTMLForm.UseXPathButtonClick(Sender: TObject);
+var
+  HTML: string;
+begin
+  HTML := GetHTML(FileNameEdit.Text);
+  Memo.Clear;
+
+  ParseHTML(HTML).Find(XPathEdit.Text).Map( procedure(AIndex: Integer; AEl: TElement)
   begin
     Memo.Lines.Add(AEl.Value);
   end );
@@ -89,30 +125,30 @@ begin
   Memo.SelLength := 0;
 end;
 
-procedure THTMLForm.OpenButtonClick(Sender: TObject);
+procedure THTMLForm.ToTextButtonClick(Sender: TObject);
 var
-  S: string;
-  HtmlDoc: TDocument;
+  HTML: string;
+  HTMLDoc: TDocument;
   Formatter: TBaseFormatter;
 begin
-  S := GetHTML(FileNameEdit.Text);
+  HTML := GetHTML(FileNameEdit.Text);
   Memo.Clear;
 
-  HtmlParser := THTMLParser.Create;
+  HTMLParser := THTMLParser.Create;
   try
-    HtmlDoc := HtmlParser.parseString(S);
+    HTMLDoc := HTMLParser.parseString(HTML);
   finally
-    FreeAndNil(HtmlParser);
+    FreeAndNil(HTMLParser);
   end;
 
   Formatter := TTextFormatter.Create;
   try
-    Memo.Lines.Text := Formatter.getText(HtmlDoc);
+    Memo.Lines.Text := Formatter.getText(HTMLDoc);
   finally
     FreeAndNil(Formatter);
   end;
 
-  FreeAndNil(HtmlDoc);
+  FreeAndNil(HTMLDoc);
 
   Memo.SelStart := 0;
   Memo.SelLength := 0;
