@@ -96,7 +96,6 @@ begin
       end;
 
       TThread.Synchronize(TThread.Current, procedure begin HTMLForm.Memo.Lines.Add(IfThen(body <> '', 'GOOD', 'BAD')); end);
-      Sleep(3000);
     end);
 
     {}

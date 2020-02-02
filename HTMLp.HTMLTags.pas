@@ -61,7 +61,6 @@ type
   end;
 
 var
-  HTMLTagList: THTMLTagList;
   URLSchemes: TURLSchemes;
 
 const
@@ -351,6 +350,22 @@ begin
   inherited Destroy;
 end;
 
+{function THTMLTagList.GetTag(Compare: TCompareTag): THTMLTag;
+var
+  I, Low, High, Rel: Integer;
+begin
+  Result := nil;
+
+  for i := FList.Count - 1 downto 0 do
+  begin
+    if Compare(FList[i]) <> 0 then
+    begin
+      Result := FList[i];
+      Exit;
+    end;
+  end;
+end;}
+
 function THTMLTagList.GetTag(Compare: TCompareTag): THTMLTag;
 var
   I, Low, High, Rel: Integer;
@@ -432,7 +447,7 @@ begin
 end;
 
 initialization
-  HTMLTagList := THTMLTagList.Create;
+  //HTMLTagList := THTMLTagList.Create;
   URLSchemes := TURLSchemes.Create;
   URLSchemes.Add('http');
   URLSchemes.Add('https');
@@ -443,7 +458,7 @@ initialization
   URLSchemes.Add('gopher');
 
 finalization
-  HTMLTagList.Free;
+  //HTMLTagList.Free;
   URLSchemes.Free;
 
 end.

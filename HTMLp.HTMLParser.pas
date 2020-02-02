@@ -10,6 +10,7 @@ type
   private
     FHTMLDocument: TDocument;
     FHTMLReader: THTMLReader;
+    FHTMLTagList: THTMLTagList;
     FCurrentNode: TNode;
     FCurrentTag: THTMLTag;
     function FindDefParent: TElement;
@@ -48,7 +49,9 @@ constructor THTMLParser.Create;
 begin
   inherited Create;
 
+  FHTMLTagList := THTMLTagList.Create;
   FHTMLReader := THTMLReader.Create;
+
   with FHTMLReader do
   begin
     OnAttributeEnd := ProcessAttributeEnd;
@@ -70,6 +73,7 @@ end;
 destructor THTMLParser.Destroy;
 begin
   FHTMLReader.Free;
+  FHTMLTagList.Free;
 
   inherited Destroy;
 end;
@@ -107,7 +111,7 @@ begin
 
   while Node.NodeType = ELEMENT_NODE do
   begin
-    HTMLTag := HTMLTagList.GetTagByName(Node.Name);
+    HTMLTag := FHTMLTagList.GetTagByName(Node.Name);
 
     if HTMLTag.Number in tagList then
     begin
@@ -130,7 +134,7 @@ begin
 
   while Node.NodeType = ELEMENT_NODE do
   begin
-    HTMLTag := HTMLTagList.GetTagByName(Node.Name);
+    HTMLTag := FHTMLTagList.GetTagByName(Node.Name);
 
     if (HTMLTag.Number = TD_TAG) or (HTMLTag.Number in BlockTags) then
     begin
@@ -240,7 +244,7 @@ var
   Element: TElement;
   Parent: TNode;
 begin
-  FCurrentTag := HTMLTagList.GetTagByName(FHTMLReader.Name);
+  FCurrentTag := FHTMLTagList.GetTagByName(FHTMLReader.Name);
   if FCurrentTag.Number in (NeedFindParentTags + BlockTags) then
   begin
     Parent := FindParent;

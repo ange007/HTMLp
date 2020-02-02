@@ -3,7 +3,7 @@ unit HTMLp.Formatter;
 interface
 
 uses
-  HTMLp.DomCore;
+  HTMLp.DomCore, HTMLp.HtmlTags;
 
 const
   SHOW_ALL                    = $FFFFFFFF;
@@ -41,6 +41,7 @@ type
   protected
     FDocument: TDocument;
     FStringBuilder: TStringBuilder;
+    FHTMLTagList: THTMLTagList;
     FDepth: Integer;
     FWhatToShow: Integer;
     FExpandEntities: Boolean;
@@ -56,11 +57,13 @@ type
     procedure ProcessDocumentElement; virtual;
     procedure ProcessElement(Element: TElement); virtual;
     procedure ProcessEntityReference(EntityReference: TEntityReference); virtual;
-//    procedure ProcessNotation(Notation: TNotation); virtual;
+    // procedure ProcessNotation(Notation: TNotation); virtual;
     procedure ProcessProcessingInstruction(ProcessingInstruction: TProcessingInstruction); virtual;
     procedure ProcessTextNode(TextNode: TTextNode); virtual;
   public
     constructor Create;
+    destructor Destroy; override;
+
     function getText(document: TDocument): WideString;
   end;
 
@@ -96,7 +99,7 @@ implementation
 uses
   SysUtils,
 
-  HTMLp.Entities, HTMLp.HtmlTags;
+  HTMLp.Entities;
 
 const
   CRLF: WideString = #13#10;
@@ -218,6 +221,15 @@ constructor TBaseFormatter.Create;
 begin
   inherited Create;
   FWhatToShow := Integer(SHOW_ALL);
+
+  FHTMLTagList := THTMLTagList.Create;
+end;
+
+destructor TBaseFormatter.Destroy;
+begin
+  FreeAndNil(FHTMLTagList);
+
+  inherited Destroy;
 end;
                                     
 procedure TBaseFormatter.ProcessNode(Node: TNode);
@@ -383,7 +395,7 @@ procedure THtmlFormatter.ProcessElement(Element: TElement);
 var
   HTMLTag: THTMLTag;
 begin
-  HTMLTag := HTMLTagList.GetTagByName(Element.TagName);
+  HTMLTag := FHTMLTagList.GetTagByName(Element.TagName);
   AppendNewLine;
   AppendText(Spaces(FIndent * FDepth));
   AppendText('<' + Element.TagName);
@@ -463,21 +475,21 @@ end;
 
 procedure TTextFormatter.ProcessElement(Element: TElement);
 var
-  HtmlTag: THTMLTag;
+  HTMLTag: THTMLTag;
 begin
-  HtmlTag := HTMLTagList.GetTagByName(Element.TagName);
-  if HtmlTag.Number in ViewAsBlockTags then AppendParagraph;
+  HTMLTag := FHTMLTagList.GetTagByName(Element.TagName);
+  if HTMLTag.Number in ViewAsBlockTags then AppendParagraph;
 
-  case HtmlTag.Number of
+  case HTMLTag.Number of
     A_TAG:  FInsideAnchor := True;
     LI_TAG: AppendText('* ');
   end;
 
-  if HtmlTag.Number in PreserveWhiteSpaceTags then FPreserveWhiteSpace := True;
+  if HTMLTag.Number in PreserveWhiteSpaceTags then FPreserveWhiteSpace := True;
   inherited ProcessElement(Element);
   FPreserveWhiteSpace := False;
 
-  case HtmlTag.Number of
+  case HTMLTag.Number of
     BR_TAG:
       AppendNewLine;
 
@@ -493,7 +505,7 @@ begin
     end
   end;
 
-  if HtmlTag.Number in ViewAsBlockTags then AppendParagraph;
+  if HTMLTag.Number in ViewAsBlockTags then AppendParagraph;
 end;
 
 procedure TTextFormatter.ProcessEntityReference(EntityReference: TEntityReference);
